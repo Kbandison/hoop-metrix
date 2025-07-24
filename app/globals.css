@@ -1,26 +1,174 @@
 @import "tailwindcss";
 
 :root {
+  /* HoopMetrix Brand Colors - Kentucky Blue Palette */
+  --kentucky-blue-50: #f0f9ff;
+  --kentucky-blue-100: #e0f2fe;
+  --kentucky-blue-200: #bae6fd;
+  --kentucky-blue-300: #7dd3fc;
+  --kentucky-blue-400: #38bdf8;
+  --kentucky-blue-500: #0ea5e9;
+  --kentucky-blue-600: #0284c7; /* Primary Kentucky Blue */
+  --kentucky-blue-700: #0369a1;
+  --kentucky-blue-800: #075985;
+  --kentucky-blue-900: #0c4a6e;
+  --kentucky-blue-950: #082f49;
+  
+  /* Brand Black Palette */
+  --brand-black-50: #f8fafc;
+  --brand-black-100: #f1f5f9;
+  --brand-black-200: #e2e8f0;
+  --brand-black-300: #cbd5e1;
+  --brand-black-400: #94a3b8;
+  --brand-black-500: #64748b;
+  --brand-black-600: #475569;
+  --brand-black-700: #334155;
+  --brand-black-800: #1e293b; /* Dark Black */
+  --brand-black-900: #0f172a; /* Primary Black */
+  --brand-black-950: #020617;
+  
+  /* Brand Grey Palette */
+  --brand-grey-50: #f9fafb;
+  --brand-grey-100: #f3f4f6;
+  --brand-grey-200: #e5e7eb;
+  --brand-grey-300: #d1d5db;
+  --brand-grey-400: #9ca3af;
+  --brand-grey-500: #6b7280; /* Primary Grey */
+  --brand-grey-600: #4b5563;
+  --brand-grey-700: #374151;
+  --brand-grey-800: #1f2937;
+  --brand-grey-900: #111827;
+  
+  /* League Accent Colors */
+  --nba-accent: #c41e3a; /* NBA Red */
+  --wnba-accent: #ff6900; /* WNBA Orange */
+  
+  /* App Variables */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: var(--brand-black-900);
+  --muted: var(--brand-grey-100);
+  --muted-foreground: var(--brand-grey-500);
+  --border: var(--brand-grey-200);
+  --input: #ffffff;
+  --primary: var(--kentucky-blue-600);
+  --primary-foreground: #ffffff;
+  --secondary: var(--brand-grey-100);
+  --secondary-foreground: var(--brand-black-900);
+  --accent: var(--kentucky-blue-100);
+  --accent-foreground: var(--kentucky-blue-900);
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --ring: var(--kentucky-blue-600);
+  --radius: 0.5rem;
 }
 
 @theme inline {
+  /* Kentucky Blue Brand Colors */
+  --color-kentucky-blue-50: var(--kentucky-blue-50);
+  --color-kentucky-blue-100: var(--kentucky-blue-100);
+  --color-kentucky-blue-200: var(--kentucky-blue-200);
+  --color-kentucky-blue-300: var(--kentucky-blue-300);
+  --color-kentucky-blue-400: var(--kentucky-blue-400);
+  --color-kentucky-blue-500: var(--kentucky-blue-500);
+  --color-kentucky-blue-600: var(--kentucky-blue-600);
+  --color-kentucky-blue-700: var(--kentucky-blue-700);
+  --color-kentucky-blue-800: var(--kentucky-blue-800);
+  --color-kentucky-blue-900: var(--kentucky-blue-900);
+  --color-kentucky-blue-950: var(--kentucky-blue-950);
+  
+  /* Brand Black Colors */
+  --color-brand-black-50: var(--brand-black-50);
+  --color-brand-black-100: var(--brand-black-100);
+  --color-brand-black-200: var(--brand-black-200);
+  --color-brand-black-300: var(--brand-black-300);
+  --color-brand-black-400: var(--brand-black-400);
+  --color-brand-black-500: var(--brand-black-500);
+  --color-brand-black-600: var(--brand-black-600);
+  --color-brand-black-700: var(--brand-black-700);
+  --color-brand-black-800: var(--brand-black-800);
+  --color-brand-black-900: var(--brand-black-900);
+  --color-brand-black-950: var(--brand-black-950);
+  
+  /* Brand Grey Colors */
+  --color-brand-grey-50: var(--brand-grey-50);
+  --color-brand-grey-100: var(--brand-grey-100);
+  --color-brand-grey-200: var(--brand-grey-200);
+  --color-brand-grey-300: var(--brand-grey-300);
+  --color-brand-grey-400: var(--brand-grey-400);
+  --color-brand-grey-500: var(--brand-grey-500);
+  --color-brand-grey-600: var(--brand-grey-600);
+  --color-brand-grey-700: var(--brand-grey-700);
+  --color-brand-grey-800: var(--brand-grey-800);
+  --color-brand-grey-900: var(--brand-grey-900);
+  
+  /* League Accent Colors */
+  --color-nba-accent: var(--nba-accent);
+  --color-wnba-accent: var(--wnba-accent);
+  
+  /* Standard Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-ring: var(--ring);
+  
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Border Radius */
+  --radius: var(--radius);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: var(--brand-black-950);
+    --foreground: #ffffff;
+    --muted: var(--brand-black-800);
+    --muted-foreground: var(--brand-grey-400);
+    --border: var(--brand-black-700);
+    --input: var(--brand-black-800);
+    --secondary: var(--brand-black-800);
+    --secondary-foreground: #ffffff;
+    --accent: var(--brand-black-700);
+    --accent-foreground: #ffffff;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
 }

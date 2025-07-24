@@ -1,0 +1,50 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getPlayersByTeam } from '@/lib/data/players-index'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const teamId = params.id
+
+    // Check if Supabase is configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      // Use indexed data when Supabase is not configured
+      const players = getPlayersByTeam(teamId)
+      
+      return NextResponse.json({
+        players,
+        total: players.length
+      })
+    }
+
+    // Original Supabase code
+    const { createClient } = await import('@/lib/supabase/server')
+    const supabase = await createClient()
+    
+    const { data: players, error } = await supabase
+      .from('players')
+      .select('id, name, position, jersey_number')
+      .eq('team_id', teamId)
+      .eq('is_active', true)
+      .order('jersey_number')
+
+    if (error) {
+      console.error('Error fetching team players:', error)
+      return NextResponse.json({ error: 'Failed to fetch team players' }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      players: players || [],
+      total: players?.length || 0
+    })
+
+  } catch (error) {
+    console.error('Team players API error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

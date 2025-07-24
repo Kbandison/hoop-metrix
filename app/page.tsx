@@ -1,102 +1,361 @@
 import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Star, Trophy, Users, ShoppingBag, Crown, ArrowRight } from "lucide-react";
+import Navigation from "@/components/layout/navigation";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen">
+      {/* Navigation */}
+      <Navigation />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Player Images */}
+        <div className="absolute inset-0 grid grid-cols-2 md:grid-cols-4 gap-2 opacity-35">
+          <div className="relative h-full">
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+              src="/Damien Daniels Hoop Metrix.jpg"
+              alt="Damien Daniels"
+              fill
+              className="object-cover grayscale"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </div>
+          <div className="relative h-full">
+            <Image
+              src="/Justice Brantley Hoop Metrix.jpg"
+              alt="Justice Brantley"
+              fill
+              className="object-cover grayscale"
+            />
+          </div>
+          <div className="relative h-full">
+            <Image
+              src="/RJ McGee Hoop Metrix.jpg"
+              alt="RJ McGee"
+              fill
+              className="object-cover grayscale"
+            />
+          </div>
+          <div className="relative h-full">
+            <Image
+              src="/Seth Compas Hoop Metrix.jpg"
+              alt="Seth Compas"
+              fill
+              className="object-cover grayscale"
+            />
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+        
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70" />
+        
+        {/* Content */}
+        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+          <div className="mb-6">
+            <Image
+              src="/HM_logo_black.png"
+              alt="HoopMetrix Logo"
+              width={120}
+              height={120}
+              className="mx-auto mb-6 rounded-full bg-white/10 p-4"
+            />
+            <Badge className="mb-4 bg-kentucky-blue-500/20 text-kentucky-blue-300 border-kentucky-blue-500/30">
+              Basketball Encyclopedia
+            </Badge>
+          </div>
+          
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6">
+            The Ultimate
+            <span className="block text-kentucky-blue-400">Basketball Hub</span>
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-white/80 mb-8 max-w-2xl mx-auto">
+            Discover comprehensive player profiles, team stats, exclusive merchandise, and premium basketball content all in one place.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link href="/players">
+              <Button size="lg" className="bg-kentucky-blue-600 hover:bg-kentucky-blue-700 text-white font-semibold px-8 py-6 text-lg">
+                Explore Players
+              </Button>
+            </Link>
+            <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 px-8 py-6 text-lg">
+              Join Premium
+            </Button>
+          </div>
+          
+          <div className="mt-12 grid grid-cols-3 gap-8 max-w-md mx-auto text-center">
+            <div>
+              <div className="text-2xl font-bold text-white">500+</div>
+              <div className="text-white/60 text-sm">NBA Players</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-white">144+</div>
+              <div className="text-white/60 text-sm">WNBA Players</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-white">32</div>
+              <div className="text-white/60 text-sm">Teams Total</div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-white/60 rounded-full mt-2 animate-pulse" />
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Players Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-kentucky-blue-500/10 text-kentucky-blue-600 border-kentucky-blue-500/20">
+              Featured Players
+            </Badge>
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
+              Basketball's Elite
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Explore comprehensive profiles of the game's greatest players
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { name: "LeBron James", team: "Lakers", image: "/Damien Daniels Hoop Metrix.jpg", jersey: "23", position: "SF", pts: "25.3", reb: "7.3", ast: "7.4", id: "lebron-james" },
+              { name: "Stephen Curry", team: "Warriors", image: "/Justice Brantley Hoop Metrix.jpg", jersey: "30", position: "PG", pts: "26.4", reb: "4.5", ast: "5.1", id: "stephen-curry" },
+              { name: "A'ja Wilson", team: "Aces", image: "/RJ McGee Hoop Metrix.jpg", jersey: "22", position: "F", pts: "22.8", reb: "9.4", ast: "2.3", id: "aja-wilson" },
+              { name: "Breanna Stewart", team: "Liberty", image: "/Seth Compas Hoop Metrix.jpg", jersey: "30", position: "F", pts: "23.0", reb: "9.3", ast: "3.8", id: "breanna-stewart" }
+            ].map((player, index) => (
+              <Link key={index} href={`/players/${player.id}?from=home`}>
+                <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer group overflow-hidden">
+                  {/* Player Photo */}
+                  <div className="relative h-64 bg-gradient-to-br from-gray-200 to-gray-300 overflow-hidden">
+                    <Image
+                      src={player.image}
+                      alt={player.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    
+                    {/* Jersey Number Overlay */}
+                    <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">#{player.jersey}</span>
+                    </div>
+                  </div>
+
+                  <CardContent className="p-6">
+                    {/* Player Info */}
+                    <div className="mb-4">
+                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-kentucky-blue-600 transition-colors mb-2">
+                        {player.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Badge variant="outline" className="text-sm">
+                          {player.position}
+                        </Badge>
+                        <span className="text-sm text-gray-500">
+                          {player.team}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Player Stats */}
+                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-gray-900">{player.pts}</div>
+                        <div className="text-xs text-gray-500">PPG</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-gray-900">{player.reb}</div>
+                        <div className="text-xs text-gray-500">RPG</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-gray-900">{player.ast}</div>
+                        <div className="text-xs text-gray-500">APG</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link href="/players">
+              <Button size="lg" className="bg-kentucky-blue-600 hover:bg-kentucky-blue-700">
+                View All Players
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-gradient-to-br from-slate-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
+              Everything Basketball
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Your one-stop destination for comprehensive basketball content
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="text-center p-8 border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="w-16 h-16 bg-kentucky-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Users className="h-8 w-8 text-kentucky-blue-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Player Profiles</h3>
+              <p className="text-gray-600 mb-6">
+                Detailed stats, career highlights, and comprehensive information for every NBA and WNBA player.
+              </p>
+              <Link href="/players">
+                <Button variant="outline" className="border-kentucky-blue-600 text-kentucky-blue-600 hover:bg-kentucky-blue-50">
+                  Explore Players
+                </Button>
+              </Link>
+            </Card>
+
+            <Card className="text-center p-8 border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShoppingBag className="h-8 w-8 text-orange-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Merchandise Store</h3>
+              <p className="text-gray-600 mb-6">
+                Official jerseys, collectibles, and exclusive basketball merchandise from your favorite teams.
+              </p>
+              <Link href="/shop">
+                <Button variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50">
+                  Shop Now
+                </Button>
+              </Link>
+            </Card>
+
+            <Card className="text-center p-8 border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Crown className="h-8 w-8 text-purple-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Premium Access</h3>
+              <p className="text-gray-600 mb-6">
+                Exclusive content, advanced stats, and premium features for the ultimate basketball experience.
+              </p>
+              <Link href="/membership">
+                <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
+                  Go Premium
+                </Button>
+              </Link>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Membership CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-kentucky-blue-600 to-kentucky-blue-800 text-white">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-4xl mx-auto">
+            <Crown className="h-16 w-16 mx-auto mb-6 text-kentucky-blue-200" />
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">
+              Join HoopMetrix Premium
+            </h2>
+            <p className="text-xl text-kentucky-blue-100 mb-8 max-w-2xl mx-auto">
+              Get unlimited access to advanced player analytics, exclusive content, and premium features for just $9.99/month.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-3xl mx-auto">
+              <div className="text-center">
+                <Trophy className="h-8 w-8 mx-auto mb-3 text-kentucky-blue-200" />
+                <h4 className="font-semibold mb-2">Advanced Analytics</h4>
+                <p className="text-sm text-kentucky-blue-100">Deep dive into player performance metrics</p>
+              </div>
+              <div className="text-center">
+                <Star className="h-8 w-8 mx-auto mb-3 text-kentucky-blue-200" />
+                <h4 className="font-semibold mb-2">Exclusive Content</h4>
+                <p className="text-sm text-kentucky-blue-100">Behind-the-scenes interviews and stories</p>
+              </div>
+              <div className="text-center">
+                <Users className="h-8 w-8 mx-auto mb-3 text-kentucky-blue-200" />
+                <h4 className="font-semibold mb-2">Community Access</h4>
+                <p className="text-sm text-kentucky-blue-100">Connect with other basketball enthusiasts</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link href="/membership">
+                <Button size="lg" className="bg-white text-kentucky-blue-600 hover:bg-gray-100 font-semibold px-8 py-6 text-lg">
+                  Start Free Trial
+                </Button>
+              </Link>
+              <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 px-8 py-6 text-lg">
+                Learn More
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="md:col-span-2">
+              <div className="flex items-center space-x-2 mb-6">
+                <Image
+                  src="/HM_logo_transparent.png"
+                  alt="HoopMetrix Logo"
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
+                <span className="font-bold text-2xl">HoopMetrix</span>
+              </div>
+              <p className="text-gray-400 max-w-md mb-6">
+                The ultimate basketball encyclopedia featuring comprehensive player profiles, team statistics, and exclusive merchandise.
+              </p>
+              <div className="flex space-x-4">
+                <Badge variant="outline" className="border-gray-700 text-gray-300">NBA</Badge>
+                <Badge variant="outline" className="border-gray-700 text-gray-300">WNBA</Badge>
+                <Badge variant="outline" className="border-gray-700 text-gray-300">Statistics</Badge>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
+              <ul className="space-y-3">
+                <li><Link href="/players" className="text-gray-400 hover:text-white transition-colors">Players</Link></li>
+                <li><Link href="/teams" className="text-gray-400 hover:text-white transition-colors">Teams</Link></li>
+                <li><Link href="/shop" className="text-gray-400 hover:text-white transition-colors">Shop</Link></li>
+                <li><Link href="/membership" className="text-gray-400 hover:text-white transition-colors">Membership</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-lg mb-4">Support</h4>
+              <ul className="space-y-3">
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-800 mt-12 pt-8 text-center">
+            <p className="text-gray-400">
+              © 2024 HoopMetrix. All rights reserved. Built with passion for basketball.
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );
