@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   User, 
-  Settings, 
   CreditCard, 
   Bell, 
   Shield, 
@@ -513,7 +512,7 @@ export default function AccountPage() {
                       </div>
                       <Switch
                         checked={notifications.email}
-                        onCheckedChange={(checked) => setNotifications({...notifications, email: checked})}
+                        onCheckedChange={(checked: boolean) => setNotifications({...notifications, email: checked})}
                       />
                     </div>
                     
@@ -526,7 +525,7 @@ export default function AccountPage() {
                       </div>
                       <Switch
                         checked={notifications.sms}
-                        onCheckedChange={(checked) => setNotifications({...notifications, sms: checked})}
+                        onCheckedChange={(checked: boolean) => setNotifications({...notifications, sms: checked})}
                       />
                     </div>
                     
@@ -539,7 +538,7 @@ export default function AccountPage() {
                       </div>
                       <Switch
                         checked={notifications.push}
-                        onCheckedChange={(checked) => setNotifications({...notifications, push: checked})}
+                        onCheckedChange={(checked: boolean) => setNotifications({...notifications, push: checked})}
                       />
                     </div>
                     
@@ -552,7 +551,7 @@ export default function AccountPage() {
                       </div>
                       <Switch
                         checked={notifications.marketing}
-                        onCheckedChange={(checked) => setNotifications({...notifications, marketing: checked})}
+                        onCheckedChange={(checked: boolean) => setNotifications({...notifications, marketing: checked})}
                       />
                     </div>
                   </div>

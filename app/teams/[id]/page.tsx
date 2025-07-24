@@ -63,7 +63,7 @@ const cardVariants = {
     opacity: 1, 
     y: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 15
     }
@@ -188,7 +188,7 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
               className="relative"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
+              transition={{ delay: 0.2, type: "spring" as const, stiffness: 100 }}
             >
               <div className="relative h-80 lg:h-[400px] bg-gradient-to-br from-white/10 to-white/5 rounded-2xl overflow-hidden backdrop-blur-sm border border-white/20 flex items-center justify-center">
                 <Image
@@ -209,7 +209,7 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
                   className="absolute top-6 right-6 bg-black/30 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30"
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.5, type: "spring" }}
+                  transition={{ delay: 0.5, type: "spring" as const }}
                 >
                   <span className="text-white font-bold text-lg">
                     {team.league}
@@ -222,7 +222,7 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
                     className="absolute bottom-6 right-6 bg-yellow-600/20 backdrop-blur-sm rounded-full p-3 border border-yellow-400/30"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ delay: 0.7, type: "spring" }}
+                    transition={{ delay: 0.7, type: "spring" as const }}
                   >
                     <div className="flex items-center gap-2">
                       <Trophy className="h-6 w-6 text-yellow-400" />

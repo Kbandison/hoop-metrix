@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import Navigation from '@/components/layout/navigation'
+import Footer from '@/components/layout/footer'
 
 interface Player {
   id: string
@@ -62,7 +63,7 @@ const cardVariants = {
     y: 0,
     scale: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 15
     }
@@ -71,7 +72,7 @@ const cardVariants = {
     y: -10,
     scale: 1.05,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 400,
       damping: 10
     }
@@ -540,6 +541,8 @@ export default function PlayersPage() {
           )}
         </div>
       </section>
+      
+      <Footer />
     </div>
   )
 }

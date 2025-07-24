@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
           }
         })
 
-        return players.map(player => PlayerSchema.parse(player))
+        return players.map((player: any) => PlayerSchema.parse(player))
       } catch (error) {
         console.error(`Error fetching roster for team ${teamId}:`, error)
         return []

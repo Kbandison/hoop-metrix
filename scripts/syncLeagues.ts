@@ -128,7 +128,7 @@ async function syncRoster(teamId: number, league: 'NBA' | 'WNBA') {
       }
     })
 
-    return players.map(player => PlayerSchema.parse(player))
+    return players.map((player: any) => PlayerSchema.parse(player))
   } catch (error) {
     console.error(`Error fetching roster for team ${teamId}:`, error)
     return []

@@ -26,8 +26,8 @@ export const PlayerSchema = z.object({
   birth_date: z.string().optional(),
   photo_url: z.string(),
   bio: z.string().optional(),
-  season_stats: z.record(z.any()).optional(),
-  career_stats: z.record(z.any()).optional(),
+  season_stats: z.record(z.string(), z.any()).optional(),
+  career_stats: z.record(z.string(), z.any()).optional(),
   is_active: z.boolean().default(true),
 })
 

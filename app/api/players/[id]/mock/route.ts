@@ -75,8 +75,9 @@ const mockSimilarPlayers = [
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     // For demo purposes, return the same player for any ID
     // In real implementation, you'd fetch by actual ID
@@ -84,7 +85,7 @@ export async function GET(
     return NextResponse.json({
       player: {
         ...mockPlayerDetail,
-        id: params.id
+        id: id
       },
       similarPlayers: mockSimilarPlayers
     })

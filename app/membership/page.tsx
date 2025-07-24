@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Navigation from '@/components/layout/navigation'
+import Footer from '@/components/layout/footer'
 
 interface Plan {
   id: string
@@ -177,7 +178,7 @@ const cardVariants = {
   visible: { 
     opacity: 1, 
     y: 0,
-    transition: { duration: 0.6, type: "spring", stiffness: 100 }
+    transition: { duration: 0.6, type: "spring" as const, stiffness: 100 }
   },
   hover: {
     y: -10,
@@ -226,7 +227,7 @@ export default function MembershipPage() {
               className="inline-block mb-6"
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.3, duration: 0.8, type: "spring" }}
+              transition={{ delay: 0.3, duration: 0.8, type: "spring" as const }}
             >
               <Badge className="bg-gradient-to-r from-kentucky-blue-500 to-purple-500 text-white px-6 py-2 text-sm font-semibold">
                 🏀 UNLOCK YOUR POTENTIAL
@@ -300,7 +301,7 @@ export default function MembershipPage() {
                   animate={{
                     x: billingCycle === 'yearly' ? 32 : 0
                   }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  transition={{ type: "spring" as const, stiffness: 500, damping: 30 }}
                 />
               </motion.button>
               <span className={`text-sm font-medium ${billingCycle === 'yearly' ? 'text-white' : 'text-gray-400'}`}>
@@ -582,6 +583,8 @@ export default function MembershipPage() {
           </motion.div>
         </div>
       </section>
+      
+      <Footer />
     </div>
   )
 }

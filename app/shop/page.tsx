@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import Navigation from '@/components/layout/navigation'
+import Footer from '@/components/layout/footer'
 import { useCart } from '@/lib/contexts/cart-context'
 
 interface Product {
@@ -144,7 +145,7 @@ const cardVariants = {
     y: 0,
     scale: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 15
     }
@@ -153,7 +154,7 @@ const cardVariants = {
     y: -10,
     scale: 1.02,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 400,
       damping: 10
     }
@@ -263,7 +264,7 @@ export default function ShopPage() {
               className="inline-block mb-6"
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.5, duration: 0.8, type: "spring", stiffness: 100 }}
+              transition={{ delay: 0.5, duration: 0.8, type: "spring" as const, stiffness: 100 }}
             >
               <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 border border-white/30">
                 <span className="text-sm font-semibold tracking-wider">🏀 OFFICIAL MERCHANDISE</span>
@@ -311,7 +312,7 @@ export default function ShopPage() {
                   className="bg-white/15 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20 hover:bg-white/25 transition-all duration-300"
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 1 + feature.delay, duration: 0.5, type: "spring" }}
+                  transition={{ delay: 1 + feature.delay, duration: 0.5, type: "spring" as const }}
                   whileHover={{ scale: 1.05, y: -2 }}
                 >
                   <span className="text-white font-semibold text-sm">
@@ -617,7 +618,7 @@ export default function ShopPage() {
                             className="absolute top-4 left-4"
                             initial={{ scale: 0, rotate: -90 }}
                             animate={{ scale: 1, rotate: 0 }}
-                            transition={{ delay: 0.2, type: "spring" }}
+                            transition={{ delay: 0.2, type: "spring" as const }}
                           >
                             <Badge className="bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold px-3 py-1 shadow-lg">
                               🔥 SALE
@@ -631,7 +632,7 @@ export default function ShopPage() {
                             className="absolute bottom-4 left-4"
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            transition={{ delay: 0.4, type: "spring" }}
+                            transition={{ delay: 0.4, type: "spring" as const }}
                           >
                             <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold px-3 py-1 shadow-lg">
                               ⭐ HOT
@@ -795,6 +796,8 @@ export default function ShopPage() {
           )}
         </div>
       </section>
+      
+      <Footer />
     </div>
   )
 }

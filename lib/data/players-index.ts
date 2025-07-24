@@ -219,7 +219,7 @@ export const WNBA_PLAYERS: Record<string, PlayerData> = {
     season_stats: { pts: 17.8, reb: 2.6, ast: 4.2, fg_pct: 43.5, three_pt_pct: 37.9 },
     career_stats: { games_played: 203, pts_avg: 15.3, reb_avg: 2.5, ast_avg: 3.8, fg_pct: 43.1 },
     awards: ["2× WNBA Champion", "WNBA All-Star"],
-    social: { twitter: "@kelseyplum10", Instagram: "@kelseyplum10" }
+    social: { twitter: "@kelseyplum10", instagram: "@kelseyplum10" }
   },
   "sabrina-ionescu": {
     id: "sabrina-ionescu",

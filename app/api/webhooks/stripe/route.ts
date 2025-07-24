@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
           .update({
             membership_status: subscription.status === 'active' ? 'premium' : 'free',
             membership_expires_at: subscription.status === 'active' 
-              ? new Date(subscription.current_period_end * 1000).toISOString()
+              ? new Date((subscription as any).current_period_end * 1000).toISOString()
               : null
           })
           .eq('stripe_customer_id', customerId)

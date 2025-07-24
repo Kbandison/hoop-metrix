@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -107,7 +107,7 @@ const itemVariants = {
   }
 }
 
-export default function OrderConfirmationPage() {
+function OrderConfirmationContent() {
   const searchParams = useSearchParams()
   const [order, setOrder] = useState<OrderDetails>(MOCK_ORDER)
   const [isShared, setIsShared] = useState(false)
@@ -173,7 +173,7 @@ export default function OrderConfirmationPage() {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                transition={{ delay: 0.3, type: "spring" as const, stiffness: 200 }}
                 className="inline-block mb-6"
               >
                 <div className="bg-green-100 rounded-full p-4 mb-4">
@@ -392,5 +392,18 @@ export default function OrderConfirmationPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OrderConfirmationPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-kentucky-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading order details...</p>
+      </div>
+    </div>}>
+      <OrderConfirmationContent />
+    </Suspense>
   )
 }

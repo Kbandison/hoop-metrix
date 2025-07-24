@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   BarChart3, 
   Users, 
@@ -20,7 +20,20 @@ import {
   Plus,
   Search,
   Filter,
-  Download
+  Download,
+  Shield,
+  Zap,
+  Star,
+  Clock,
+  DollarSign,
+  Mail,
+  Phone,
+  ArrowUp,
+  ArrowDown,
+  MoreHorizontal,
+  CheckCircle,
+  XCircle,
+  AlertTriangle
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -29,6 +42,7 @@ import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Navigation from '@/components/layout/navigation'
+import Footer from '@/components/layout/footer'
 
 // Mock data for dashboard
 const DASHBOARD_STATS = {
@@ -145,33 +159,71 @@ const cardVariants = {
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedItems, setSelectedItems] = useState<string[]>([])
+  const [sortBy, setSortBy] = useState('date')
+  const [filterBy, setFilterBy] = useState('all')
+
+  const handleItemSelect = (id: string) => {
+    setSelectedItems(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    )
+  }
+
+  const handleBulkAction = (action: string) => {
+    console.log(`Performing ${action} on items:`, selectedItems)
+    // In real app, perform bulk action
+    setSelectedItems([])
+  }
+
+  const handleViewItem = (id: string, type: string) => {
+    console.log(`Viewing ${type} with ID:`, id)
+    // For now, just show an alert - in real app, navigate to detail view
+    alert(`Viewing ${type} details for ID: ${id}`)
+  }
+
+  const handleEditItem = (id: string, type: string) => {
+    console.log(`Editing ${type} with ID:`, id)
+    // For now, just show an alert - in real app, open edit form
+    alert(`Opening edit form for ${type} ID: ${id}`)
+  }
+
+  const handleDeleteItem = (id: string, type: string) => {
+    const confirmed = confirm(`Are you sure you want to delete this ${type}?`)
+    if (confirmed) {
+      console.log(`Deleting ${type} with ID:`, id)
+      // For now, just log - in real app, make API call to delete
+      alert(`${type} with ID ${id} has been deleted`)
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
       case 'completed':
-        return 'bg-green-100 text-green-800'
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200'
       case 'processing':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-blue-100 text-blue-800 border-blue-200'
       case 'shipped':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-purple-100 text-purple-800 border-purple-200'
       case 'out_of_stock':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 text-red-800 border-red-200'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-gray-100 text-gray-800 border-gray-200'
     }
   }
 
   const getPlanColor = (plan: string) => {
     switch (plan) {
       case 'Elite Insider':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
       case 'Pro Stats':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-gradient-to-r from-kentucky-blue-500 to-kentucky-blue-600 text-white'
       case 'Free Fan':
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
     }
   }
 
@@ -194,11 +246,18 @@ export default function AdminDashboard() {
                 <p className="text-gray-600 mt-1">Manage your HoopMetrix platform</p>
               </div>
               <div className="flex items-center gap-3">
-                <Button variant="outline" className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                  onClick={() => alert('Export functionality coming soon!')}
+                >
                   <Download className="w-4 h-4" />
                   Export Data
                 </Button>
-                <Button className="bg-kentucky-blue-600 hover:bg-kentucky-blue-700 flex items-center gap-2">
+                <Button 
+                  className="bg-gradient-to-r from-kentucky-blue-600 to-kentucky-blue-700 hover:from-kentucky-blue-700 hover:to-kentucky-blue-800 flex items-center gap-2 text-white shadow-lg transition-all duration-200 hover:shadow-xl"
+                  onClick={() => alert('Add new item functionality coming soon!')}
+                >
                   <Plus className="w-4 h-4" />
                   Add New
                 </Button>
@@ -208,24 +267,24 @@ export default function AdminDashboard() {
 
           {/* Dashboard Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 bg-white border shadow-sm">
-              <TabsTrigger value="overview" className="flex items-center gap-2">
+            <TabsList className="grid w-full grid-cols-5 bg-white border shadow-sm rounded-lg p-1">
+              <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-kentucky-blue-600 data-[state=active]:to-kentucky-blue-700 data-[state=active]:text-white transition-all duration-200">
                 <BarChart3 className="w-4 h-4" />
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="users" className="flex items-center gap-2">
+              <TabsTrigger value="users" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-kentucky-blue-600 data-[state=active]:to-kentucky-blue-700 data-[state=active]:text-white transition-all duration-200">
                 <Users className="w-4 h-4" />
                 Users
               </TabsTrigger>
-              <TabsTrigger value="orders" className="flex items-center gap-2">
+              <TabsTrigger value="orders" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-kentucky-blue-600 data-[state=active]:to-kentucky-blue-700 data-[state=active]:text-white transition-all duration-200">
                 <ShoppingBag className="w-4 h-4" />
                 Orders
               </TabsTrigger>
-              <TabsTrigger value="products" className="flex items-center gap-2">
+              <TabsTrigger value="products" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-kentucky-blue-600 data-[state=active]:to-kentucky-blue-700 data-[state=active]:text-white transition-all duration-200">
                 <Package className="w-4 h-4" />
                 Products
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <TabsTrigger value="analytics" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-kentucky-blue-600 data-[state=active]:to-kentucky-blue-700 data-[state=active]:text-white transition-all duration-200">
                 <TrendingUp className="w-4 h-4" />
                 Analytics
               </TabsTrigger>
@@ -412,10 +471,20 @@ export default function AdminDashboard() {
                             {user.plan}
                           </Badge>
                           <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleViewItem(user.id, 'user')}
+                              className="hover:bg-kentucky-blue-50 hover:border-kentucky-blue-300 hover:text-kentucky-blue-600 transition-colors"
+                            >
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEditItem(user.id, 'user')}
+                              className="hover:bg-kentucky-blue-50 hover:border-kentucky-blue-300 hover:text-kentucky-blue-600 transition-colors"
+                            >
                               <Edit className="w-4 h-4" />
                             </Button>
                           </div>
@@ -433,7 +502,10 @@ export default function AdminDashboard() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>Product Management</CardTitle>
-                    <Button className="bg-kentucky-blue-600 hover:bg-kentucky-blue-700">
+                    <Button 
+                      className="bg-gradient-to-r from-kentucky-blue-600 to-kentucky-blue-700 hover:from-kentucky-blue-700 hover:to-kentucky-blue-800 text-white shadow-lg transition-all duration-200 hover:shadow-xl"
+                      onClick={() => alert('Add product functionality coming soon!')}
+                    >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Product
                     </Button>
@@ -461,10 +533,20 @@ export default function AdminDashboard() {
                             {product.status === 'out_of_stock' ? 'Out of Stock' : 'Active'}
                           </Badge>
                           <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEditItem(product.id, 'product')}
+                              className="hover:bg-kentucky-blue-50 hover:border-kentucky-blue-300 hover:text-kentucky-blue-600 transition-colors"
+                            >
                               <Edit className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleDeleteItem(product.id, 'product')}
+                              className="hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors"
+                            >
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
@@ -504,10 +586,20 @@ export default function AdminDashboard() {
                             {order.status}
                           </Badge>
                           <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleViewItem(order.id, 'order')}
+                              className="hover:bg-kentucky-blue-50 hover:border-kentucky-blue-300 hover:text-kentucky-blue-600 transition-colors"
+                            >
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEditItem(order.id, 'order')}
+                              className="hover:bg-kentucky-blue-50 hover:border-kentucky-blue-300 hover:text-kentucky-blue-600 transition-colors"
+                            >
                               <Edit className="w-4 h-4" />
                             </Button>
                           </div>
