@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get auth users data for last sign in info
-    const authUsers = []
+    const authUsers: { id: string; lastSignInAt: string | undefined }[] = []
     if (users) {
       for (const user of users) {
         try {
