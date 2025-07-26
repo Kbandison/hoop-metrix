@@ -42,6 +42,76 @@ interface PlayersResponse {
   }
 }
 
+// Team colors mapping (same as teams page)
+const getTeamColors = (teamName: string, league: string) => {
+  const teamColors: Record<string, { primary: string; secondary: string; gradient: string }> = {
+    // NBA Teams
+    'Lakers': { primary: '#552583', secondary: '#FDB927', gradient: 'linear-gradient(90deg, #552583, #FDB927)' },
+    'Warriors': { primary: '#1D428A', secondary: '#FFC72C', gradient: 'linear-gradient(90deg, #1D428A, #FFC72C)' },
+    'Celtics': { primary: '#007A33', secondary: '#BA9653', gradient: 'linear-gradient(90deg, #007A33, #BA9653)' },
+    'Bulls': { primary: '#CE1141', secondary: '#000000', gradient: 'linear-gradient(90deg, #CE1141, #000000)' },
+    'Heat': { primary: '#98002E', secondary: '#F9A01B', gradient: 'linear-gradient(90deg, #98002E, #F9A01B)' },
+    'Knicks': { primary: '#006BB6', secondary: '#F58426', gradient: 'linear-gradient(90deg, #006BB6, #F58426)' },
+    'Nets': { primary: '#000000', secondary: '#FFFFFF', gradient: 'linear-gradient(90deg, #000000, #444444)' },
+    '76ers': { primary: '#006BB6', secondary: '#ED174C', gradient: 'linear-gradient(90deg, #006BB6, #ED174C)' },
+    'Raptors': { primary: '#CE1141', secondary: '#000000', gradient: 'linear-gradient(90deg, #CE1141, #000000)' },
+    'Bucks': { primary: '#00471B', secondary: '#EEE1C6', gradient: 'linear-gradient(90deg, #00471B, #EEE1C6)' },
+    'Cavaliers': { primary: '#860038', secondary: '#FDBB30', gradient: 'linear-gradient(90deg, #860038, #FDBB30)' },
+    'Pistons': { primary: '#C8102E', secondary: '#006BB6', gradient: 'linear-gradient(90deg, #C8102E, #006BB6)' },
+    'Pacers': { primary: '#002D62', secondary: '#FDBB30', gradient: 'linear-gradient(90deg, #002D62, #FDBB30)' },
+    'Hawks': { primary: '#E03A3E', secondary: '#C1D32F', gradient: 'linear-gradient(90deg, #E03A3E, #C1D32F)' },
+    'Hornets': { primary: '#1D1160', secondary: '#00788C', gradient: 'linear-gradient(90deg, #1D1160, #00788C)' },
+    'Magic': { primary: '#0077C0', secondary: '#C4CED4', gradient: 'linear-gradient(90deg, #0077C0, #C4CED4)' },
+    'Wizards': { primary: '#002B5C', secondary: '#E31837', gradient: 'linear-gradient(90deg, #002B5C, #E31837)' },
+    'Mavericks': { primary: '#00538C', secondary: '#002F5F', gradient: 'linear-gradient(90deg, #00538C, #002F5F)' },
+    'Rockets': { primary: '#CE1141', secondary: '#000000', gradient: 'linear-gradient(90deg, #CE1141, #000000)' },
+    'Grizzlies': { primary: '#5D76A9', secondary: '#12173F', gradient: 'linear-gradient(90deg, #5D76A9, #12173F)' },
+    'Pelicans': { primary: '#0C2340', secondary: '#C8102E', gradient: 'linear-gradient(90deg, #0C2340, #C8102E)' },
+    'Spurs': { primary: '#C4CED4', secondary: '#000000', gradient: 'linear-gradient(90deg, #C4CED4, #000000)' },
+    'Nuggets': { primary: '#0E2240', secondary: '#FEC524', gradient: 'linear-gradient(90deg, #0E2240, #FEC524)' },
+    'Timberwolves': { primary: '#0C2340', secondary: '#236192', gradient: 'linear-gradient(90deg, #0C2340, #236192)' },
+    'Thunder': { primary: '#007AC1', secondary: '#EF3B24', gradient: 'linear-gradient(90deg, #007AC1, #EF3B24)' },
+    'Trail Blazers': { primary: '#E03A3E', secondary: '#000000', gradient: 'linear-gradient(90deg, #E03A3E, #000000)' },
+    'Jazz': { primary: '#002B5C', secondary: '#00471B', gradient: 'linear-gradient(90deg, #002B5C, #00471B)' },
+    'Clippers': { primary: '#C8102E', secondary: '#1D428A', gradient: 'linear-gradient(90deg, #C8102E, #1D428A)' },
+    'Kings': { primary: '#5A2D81', secondary: '#63727A', gradient: 'linear-gradient(90deg, #5A2D81, #63727A)' },
+    'Suns': { primary: '#1D1160', secondary: '#E56020', gradient: 'linear-gradient(90deg, #1D1160, #E56020)' },
+    
+    // WNBA Teams
+    'Aces': { primary: '#C8102E', secondary: '#000000', gradient: 'linear-gradient(90deg, #C8102E, #000000)' },
+    'Liberty': { primary: '#86CEBC', secondary: '#000000', gradient: 'linear-gradient(90deg, #86CEBC, #000000)' },
+    'Sky': { primary: '#418FDE', secondary: '#FDD023', gradient: 'linear-gradient(90deg, #418FDE, #FDD023)' },
+    'Storm': { primary: '#2C5234', secondary: '#FE5000', gradient: 'linear-gradient(90deg, #2C5234, #FE5000)' },
+    'Sun': { primary: '#E03A3E', secondary: '#F57C00', gradient: 'linear-gradient(90deg, #E03A3E, #F57C00)' },
+    'Dream': { primary: '#E03A3E', secondary: '#53565A', gradient: 'linear-gradient(90deg, #E03A3E, #53565A)' },
+    'Fever': { primary: '#E03A3E', secondary: '#FDBB30', gradient: 'linear-gradient(90deg, #E03A3E, #FDBB30)' },
+    'Lynx': { primary: '#236192', secondary: '#9EA2A2', gradient: 'linear-gradient(90deg, #236192, #9EA2A2)' },
+    'Mercury': { primary: '#201747', secondary: '#E56020', gradient: 'linear-gradient(90deg, #201747, #E56020)' },
+    'Mystics': { primary: '#E03A3E', secondary: '#002B5C', gradient: 'linear-gradient(90deg, #E03A3E, #002B5C)' },
+    'Wings': { primary: '#C4CED4', secondary: '#002B5C', gradient: 'linear-gradient(90deg, #C4CED4, #002B5C)' }
+  }
+  
+  // Find team colors by partial name match
+  const teamNameLower = teamName.toLowerCase()
+  const teamKey = Object.keys(teamColors).find(key => {
+    const keyLower = key.toLowerCase()
+    return teamNameLower.includes(keyLower) || keyLower.includes(teamNameLower)
+  })
+  
+  if (teamKey) {
+    return teamColors[teamKey]
+  }
+  
+  // Default colors based on league
+  if (league === 'WNBA') {
+    return { primary: '#E03A3E', secondary: '#53565A', gradient: 'linear-gradient(90deg, #E03A3E, #53565A)' }
+  } else if (league === 'Custom') {
+    return { primary: '#8B5CF6', secondary: '#A855F7', gradient: 'linear-gradient(90deg, #8B5CF6, #A855F7)' }
+  } else {
+    return { primary: '#1e293b', secondary: '#475569', gradient: 'linear-gradient(90deg, #1e293b, #475569)' }
+  }
+}
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -373,7 +443,12 @@ export default function PlayersPage() {
                       <Card className="overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
                         <CardContent className="p-0">
                           {/* Player Image */}
-                          <div className="relative h-80 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                          <div 
+                            className="relative h-80 overflow-hidden"
+                            style={{
+                              background: `linear-gradient(135deg, ${getTeamColors(player.teams.name, player.teams.league).primary}, ${getTeamColors(player.teams.name, player.teams.league).secondary})`
+                            }}
+                          >
                             <Image
                               src={player.photo_url}
                               alt={player.name}

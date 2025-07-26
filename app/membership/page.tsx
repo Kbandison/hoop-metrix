@@ -29,59 +29,42 @@ interface Plan {
 const MONTHLY_PLANS: Plan[] = [
   {
     id: 'free',
-    name: 'Free Fan',
+    name: 'Free Access',
     price: 0,
     interval: 'month',
-    description: 'Perfect for casual basketball fans',
+    description: 'Basic basketball information',
     features: [
       'Basic player profiles',
       'Team information',
       'Season schedules',
       'Basic statistics',
-      'Community discussions'
+      'Limited access to content'
     ],
     color: 'from-gray-500 to-gray-600',
     icon: Users
   },
   {
-    id: 'pro',
-    name: 'Pro Stats',
-    price: 9.99,
+    id: 'premium',
+    name: 'HoopMetrix Premium',
+    price: 10.00,
     interval: 'month',
-    description: 'For the serious basketball analyst',
+    description: 'Complete basketball encyclopedia access',
     features: [
-      'Everything in Free',
+      'Full access to all player profiles',
+      'Complete team information & stats',
       'Advanced statistics & analytics',
       'Player comparison tools',
       'Historical data access',
       'Premium articles & insights',
       'Ad-free experience',
-      'Priority customer support'
+      'Priority customer support',
+      'Exclusive insider content',
+      'Custom alerts & notifications',
+      'Early access to new features'
     ],
     isPopular: true,
-    badge: 'Most Popular',
+    badge: 'Complete Access',
     color: 'from-kentucky-blue-500 to-kentucky-blue-600',
-    icon: TrendingUp
-  },
-  {
-    id: 'elite',
-    name: 'Elite Insider',
-    price: 19.99,
-    interval: 'month',
-    description: 'Ultimate basketball experience',
-    features: [
-      'Everything in Pro Stats',
-      'Exclusive insider content',
-      'Live game analytics',
-      'Custom alerts & notifications',
-      'Early access to new features',
-      'VIP community access',
-      'Monthly expert webinars',
-      'Personalized insights dashboard'
-    ],
-    isPremium: true,
-    badge: 'Premium',
-    color: 'from-purple-500 to-purple-600',
     icon: Crown
   }
 ]
@@ -89,78 +72,60 @@ const MONTHLY_PLANS: Plan[] = [
 const YEARLY_PLANS: Plan[] = [
   {
     id: 'free',
-    name: 'Free Fan',
+    name: 'Free Access',
     price: 0,
     interval: 'year',
-    description: 'Perfect for casual basketball fans',
+    description: 'Basic basketball information',
     features: [
       'Basic player profiles',
       'Team information',
       'Season schedules',
       'Basic statistics',
-      'Community discussions'
+      'Limited access to content'
     ],
     color: 'from-gray-500 to-gray-600',
     icon: Users
   },
   {
-    id: 'pro',
-    name: 'Pro Stats',
-    price: 99.99,
-    originalPrice: 119.88,
+    id: 'premium',
+    name: 'HoopMetrix Premium',
+    price: 100.00,
+    originalPrice: 120.00,
     interval: 'year',
-    description: 'For the serious basketball analyst',
+    description: 'Complete basketball encyclopedia access',
     features: [
-      'Everything in Free',
+      'Full access to all player profiles',
+      'Complete team information & stats',
       'Advanced statistics & analytics',
       'Player comparison tools',
       'Historical data access',
       'Premium articles & insights',
       'Ad-free experience',
-      'Priority customer support'
+      'Priority customer support',
+      'Exclusive insider content',
+      'Custom alerts & notifications',
+      'Early access to new features'
     ],
     isPopular: true,
     badge: 'Save 17%',
     color: 'from-kentucky-blue-500 to-kentucky-blue-600',
-    icon: TrendingUp
-  },
-  {
-    id: 'elite',
-    name: 'Elite Insider',
-    price: 199.99,
-    originalPrice: 239.88,
-    interval: 'year',
-    description: 'Ultimate basketball experience',
-    features: [
-      'Everything in Pro Stats',
-      'Exclusive insider content',
-      'Live game analytics',
-      'Custom alerts & notifications',
-      'Early access to new features',
-      'VIP community access',
-      'Monthly expert webinars',
-      'Personalized insights dashboard'
-    ],
-    isPremium: true,
-    badge: 'Save 17%',
-    color: 'from-purple-500 to-purple-600',
     icon: Crown
   }
 ]
 
 const FEATURES_COMPARISON = [
-  { feature: 'Player Profiles', free: true, pro: true, elite: true },
-  { feature: 'Team Information', free: true, pro: true, elite: true },
-  { feature: 'Basic Statistics', free: true, pro: true, elite: true },
-  { feature: 'Advanced Analytics', free: false, pro: true, elite: true },
-  { feature: 'Player Comparisons', free: false, pro: true, elite: true },
-  { feature: 'Historical Data', free: false, pro: true, elite: true },
-  { feature: 'Premium Articles', free: false, pro: true, elite: true },
-  { feature: 'Ad-free Experience', free: false, pro: true, elite: true },
-  { feature: 'Live Game Analytics', free: false, pro: false, elite: true },
-  { feature: 'Custom Alerts', free: false, pro: false, elite: true },
-  { feature: 'VIP Community', free: false, pro: false, elite: true },
-  { feature: 'Expert Webinars', free: false, pro: false, elite: true }
+  { feature: 'Basic Player Profiles', free: true, premium: true },
+  { feature: 'Basic Team Information', free: true, premium: true },
+  { feature: 'Basic Statistics', free: true, premium: true },
+  { feature: 'Complete Player Profiles', free: false, premium: true },
+  { feature: 'Advanced Analytics', free: false, premium: true },
+  { feature: 'Player Comparisons', free: false, premium: true },
+  { feature: 'Historical Data', free: false, premium: true },
+  { feature: 'Premium Articles', free: false, premium: true },
+  { feature: 'Ad-free Experience', free: false, premium: true },
+  { feature: 'Exclusive Insider Content', free: false, premium: true },
+  { feature: 'Custom Alerts', free: false, premium: true },
+  { feature: 'Priority Support', free: false, premium: true }
 ]
 
 const containerVariants = {
@@ -189,14 +154,41 @@ const cardVariants = {
 
 export default function MembershipPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
-  const [selectedPlan, setSelectedPlan] = useState<string>('pro')
+  const [selectedPlan, setSelectedPlan] = useState<string>('premium')
 
   const currentPlans = billingCycle === 'monthly' ? MONTHLY_PLANS : YEARLY_PLANS
 
-  const handlePlanSelect = (planId: string) => {
+  const handlePlanSelect = async (planId: string) => {
+    if (planId === 'free') {
+      // Handle free plan signup - redirect to registration
+      window.location.href = '/auth/signup'
+      return
+    }
+
     setSelectedPlan(planId)
-    // In real app, redirect to checkout with selected plan
-    console.log('Selected plan:', planId, billingCycle)
+    
+    try {
+      // Create Stripe checkout session
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planId,
+          billingCycle,
+        }),
+      })
+
+      const { url } = await response.json()
+      
+      if (url) {
+        window.location.href = url
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error)
+      alert('Something went wrong. Please try again.')
+    }
   }
 
   return (
@@ -321,7 +313,7 @@ export default function MembershipPage() {
 
           {/* Plans Grid */}
           <motion.div
-            className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -338,12 +330,10 @@ export default function MembershipPage() {
                   <Card className={`relative overflow-hidden border-2 ${
                     plan.isPopular 
                       ? 'border-kentucky-blue-500 shadow-2xl shadow-kentucky-blue-500/20' 
-                      : plan.isPremium
-                      ? 'border-purple-500 shadow-2xl shadow-purple-500/20'
                       : 'border-gray-600'
                   } bg-slate-800/50 backdrop-blur-sm`}>
-                    {/* Popular/Premium Badge */}
-                    {(plan.isPopular || plan.isPremium) && (
+                    {/* Popular Badge */}
+                    {plan.isPopular && (
                       <div className="absolute top-0 left-0 right-0">
                         <div className={`bg-gradient-to-r ${plan.color} text-white text-center py-2 text-sm font-semibold`}>
                           {plan.badge}
@@ -351,7 +341,7 @@ export default function MembershipPage() {
                       </div>
                     )}
 
-                    <CardHeader className={`text-center ${(plan.isPopular || plan.isPremium) ? 'pt-12' : 'pt-6'}`}>
+                    <CardHeader className={`text-center ${plan.isPopular ? 'pt-12' : 'pt-6'}`}>
                       <div className={`w-16 h-16 mx-auto mb-4 bg-gradient-to-r ${plan.color} rounded-2xl flex items-center justify-center`}>
                         <IconComponent className="w-8 h-8 text-white" />
                       </div>
@@ -374,7 +364,7 @@ export default function MembershipPage() {
                               ${plan.originalPrice}
                             </span>
                             <Badge className="bg-green-500 text-white text-xs">
-                              Save ${(plan.originalPrice - plan.price).toFixed(2)}
+                              Save ${(plan.originalPrice - plan.price).toFixed(0)}
                             </Badge>
                           </div>
                         )}
@@ -391,7 +381,7 @@ export default function MembershipPage() {
                         }`}
                         size="lg"
                       >
-                        {plan.id === 'free' ? 'Get Started' : 'Start Free Trial'}
+{plan.id === 'free' ? 'Get Started' : 'Subscribe Now'}
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
 
@@ -450,8 +440,7 @@ export default function MembershipPage() {
                     <tr className="border-b border-gray-600">
                       <th className="text-left p-6 text-white font-semibold">Features</th>
                       <th className="text-center p-6 text-white font-semibold">Free</th>
-                      <th className="text-center p-6 text-white font-semibold">Pro</th>
-                      <th className="text-center p-6 text-white font-semibold">Elite</th>
+                      <th className="text-center p-6 text-white font-semibold">Premium</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -472,15 +461,8 @@ export default function MembershipPage() {
                           )}
                         </td>
                         <td className="p-6 text-center">
-                          {item.pro ? (
+                          {item.premium ? (
                             <Check className="w-5 h-5 text-kentucky-blue-400 mx-auto" />
-                          ) : (
-                            <div className="w-5 h-5 mx-auto bg-gray-600 rounded-full" />
-                          )}
-                        </td>
-                        <td className="p-6 text-center">
-                          {item.elite ? (
-                            <Check className="w-5 h-5 text-purple-400 mx-auto" />
                           ) : (
                             <div className="w-5 h-5 mx-auto bg-gray-600 rounded-full" />
                           )}
@@ -564,9 +546,9 @@ export default function MembershipPage() {
               <Button
                 size="lg"
                 className="bg-white text-kentucky-blue-600 hover:bg-gray-100 font-semibold px-8 py-3"
-                onClick={() => handlePlanSelect('pro')}
+                onClick={() => handlePlanSelect('premium')}
               >
-                Start Free Trial
+                Subscribe Now
                 <Zap className="w-5 h-5 ml-2" />
               </Button>
               <Link href="/shop">

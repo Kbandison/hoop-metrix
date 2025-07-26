@@ -8,16 +8,15 @@ export async function GET(
   try {
     const { id: teamId } = await params
 
-    // Check if Supabase is configured
+    // Always try indexed data first for NBA/WNBA teams (more complete data)
+    const indexedTeam = getTeamById(teamId)
+    if (indexedTeam) {
+      return NextResponse.json(indexedTeam)
+    }
+
+    // Check if Supabase is configured for fallback
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      // Use indexed data when Supabase is not configured
-      const team = getTeamById(teamId)
-      
-      if (!team) {
-        return NextResponse.json({ error: 'Team not found' }, { status: 404 })
-      }
-      
-      return NextResponse.json(team)
+      return NextResponse.json({ error: 'Team not found' }, { status: 404 })
     }
 
     // Original Supabase code
@@ -28,7 +27,6 @@ export async function GET(
       .from('teams')
       .select('*')
       .eq('id', teamId)
-      .eq('is_active', true)
       .single()
 
     if (error || !team) {

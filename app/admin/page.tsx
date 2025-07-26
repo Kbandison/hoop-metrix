@@ -1,141 +1,70 @@
 'use client'
 
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import AdminGuard from '@/components/auth/admin-guard'
+import { motion } from 'framer-motion'
 import { 
   BarChart3, 
   Users, 
   ShoppingBag, 
   TrendingUp, 
-  Settings,
   User,
   Package,
   CreditCard,
   Activity,
   AlertCircle,
-  Calendar,
-  Eye,
-  Edit,
-  Trash2,
-  Plus,
-  Search,
-  Filter,
-  Download,
-  Shield,
-  Zap,
-  Star,
-  Clock,
-  DollarSign,
-  Mail,
-  Phone,
-  ArrowUp,
-  ArrowDown,
-  MoreHorizontal,
-  CheckCircle,
-  XCircle,
-  AlertTriangle
+  Download
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Navigation from '@/components/layout/navigation'
 import Footer from '@/components/layout/footer'
+import ProductManager from '@/components/admin/product-manager'
+import UserManager from '@/components/admin/user-manager'
+import OrderManager from '@/components/admin/order-manager'
 
-// Mock data for dashboard
-const DASHBOARD_STATS = {
-  totalUsers: 12847,
-  activeSubscriptions: 3241,
-  monthlyRevenue: 89450,
-  totalOrders: 1592,
-  growthRate: 24.5
+// Types for admin data
+interface AdminStats {
+  totalUsers: number
+  activeSubscriptions: number
+  monthlyRevenue: number
+  totalOrders: number
+  growthRate: number
 }
 
-const RECENT_ORDERS = [
-  {
-    id: 'HM-2024-001234',
-    customer: 'John Smith',
-    items: 2,
-    total: 149.98,
-    status: 'completed',
-    date: '2024-01-15'
-  },
-  {
-    id: 'HM-2024-001235',
-    customer: 'Sarah Johnson',
-    items: 1,
-    total: 89.99,
-    status: 'processing',
-    date: '2024-01-15'
-  },
-  {
-    id: 'HM-2024-001236',
-    customer: 'Mike Davis',
-    items: 3,
-    total: 259.97,
-    status: 'shipped',
-    date: '2024-01-14'
-  }
-]
+interface AdminUser {
+  id: string
+  name: string
+  email: string
+  plan: string
+  joinDate: string
+  status: string
+  lastLogin?: string
+}
 
-const RECENT_USERS = [
-  {
-    id: '1',
-    name: 'Alex Thompson',
-    email: 'alex@email.com',
-    plan: 'Pro Stats',
-    joinDate: '2024-01-15',
-    status: 'active'
-  },
-  {
-    id: '2',
-    name: 'Jessica Chen',
-    email: 'jessica@email.com',
-    plan: 'Elite Insider',
-    joinDate: '2024-01-14',
-    status: 'active'
-  },
-  {
-    id: '3',
-    name: 'Robert Wilson',
-    email: 'robert@email.com',
-    plan: 'Free Fan',
-    joinDate: '2024-01-13',
-    status: 'active'
-  }
-]
+interface AdminOrder {
+  id: string
+  customer: string
+  items: number
+  total: number
+  status: string
+  date: string
+  products?: string
+}
 
-const PRODUCTS = [
-  {
-    id: '1',
-    name: 'Lakers #23 LeBron James Jersey',
-    category: 'Jerseys',
-    price: 119.99,
-    stock: 45,
-    status: 'active',
-    sales: 234
-  },
-  {
-    id: '2',
-    name: 'Warriors Championship Hat',
-    category: 'Accessories',
-    price: 34.99,
-    stock: 0,
-    status: 'out_of_stock',
-    sales: 89
-  },
-  {
-    id: '3',
-    name: 'NBA Logo Hoodie',
-    category: 'Apparel',
-    price: 69.99,
-    stock: 23,
-    status: 'active',
-    sales: 156
-  }
-]
+interface AdminProduct {
+  id: string
+  name: string
+  category: string
+  price: number
+  stock: number
+  status: string
+  sales: number
+  rating?: number
+  image?: string
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -156,47 +85,71 @@ const cardVariants = {
   }
 }
 
-export default function AdminDashboard() {
+function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedItems, setSelectedItems] = useState<string[]>([])
-  const [sortBy, setSortBy] = useState('date')
-  const [filterBy, setFilterBy] = useState('all')
+  
+  // State for real data
+  const [stats, setStats] = useState<AdminStats>({ totalUsers: 0, activeSubscriptions: 0, monthlyRevenue: 0, totalOrders: 0, growthRate: 0 })
+  const [users, setUsers] = useState<AdminUser[]>([])
+  const [orders, setOrders] = useState<AdminOrder[]>([])
+  const [products, setProducts] = useState<AdminProduct[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleItemSelect = (id: string) => {
-    setSelectedItems(prev => 
-      prev.includes(id) 
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-    )
-  }
+  // Fetch data from API
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      
+      // Fetch all data in parallel
+      const [statsRes, usersRes, ordersRes, productsRes] = await Promise.all([
+        fetch('/api/admin/stats'),
+        fetch('/api/admin/users'),
+        fetch('/api/admin/orders'),
+        fetch('/api/admin/products')
+      ])
 
-  const handleBulkAction = (action: string) => {
-    console.log(`Performing ${action} on items:`, selectedItems)
-    // In real app, perform bulk action
-    setSelectedItems([])
-  }
+      // Check each response individually to identify which is failing
+      if (!statsRes.ok) {
+        console.error('Stats API failed:', statsRes.status, statsRes.statusText)
+        throw new Error(`Stats API failed: ${statsRes.status}`)
+      }
+      if (!usersRes.ok) {
+        console.error('Users API failed:', usersRes.status, usersRes.statusText)
+        throw new Error(`Users API failed: ${usersRes.status}`)
+      }
+      if (!ordersRes.ok) {
+        console.error('Orders API failed:', ordersRes.status, ordersRes.statusText)
+        throw new Error(`Orders API failed: ${ordersRes.status}`)
+      }
+      if (!productsRes.ok) {
+        console.error('Products API failed:', productsRes.status, productsRes.statusText)
+        throw new Error(`Products API failed: ${productsRes.status}`)
+      }
 
-  const handleViewItem = (id: string, type: string) => {
-    console.log(`Viewing ${type} with ID:`, id)
-    // For now, just show an alert - in real app, navigate to detail view
-    alert(`Viewing ${type} details for ID: ${id}`)
-  }
+      const [statsData, usersData, ordersData, productsData] = await Promise.all([
+        statsRes.json(),
+        usersRes.json(),
+        ordersRes.json(),
+        productsRes.json()
+      ])
 
-  const handleEditItem = (id: string, type: string) => {
-    console.log(`Editing ${type} with ID:`, id)
-    // For now, just show an alert - in real app, open edit form
-    alert(`Opening edit form for ${type} ID: ${id}`)
-  }
-
-  const handleDeleteItem = (id: string, type: string) => {
-    const confirmed = confirm(`Are you sure you want to delete this ${type}?`)
-    if (confirmed) {
-      console.log(`Deleting ${type} with ID:`, id)
-      // For now, just log - in real app, make API call to delete
-      alert(`${type} with ID ${id} has been deleted`)
+      setStats(statsData.stats)
+      setUsers(usersData.users)
+      setOrders(ordersData.orders)
+      setProducts(productsData.products)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch data')
+      console.error('Error fetching admin data:', err)
+    } finally {
+      setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -216,15 +169,48 @@ export default function AdminDashboard() {
 
   const getPlanColor = (plan: string) => {
     switch (plan) {
-      case 'Elite Insider':
-        return 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
-      case 'Pro Stats':
+      case '$10 Membership':
         return 'bg-gradient-to-r from-kentucky-blue-500 to-kentucky-blue-600 text-white'
-      case 'Free Fan':
+      case 'Free':
         return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
       default:
         return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="pt-32 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-kentucky-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading admin dashboard...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="pt-32 flex items-center justify-center">
+          <div className="text-center">
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <p className="text-red-600 mb-4">Error loading admin dashboard</p>
+            <p className="text-gray-600">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 bg-kentucky-blue-600 hover:bg-kentucky-blue-700"
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -240,7 +226,7 @@ export default function AdminDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pt-16">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
                 <p className="text-gray-600 mt-1">Manage your HoopMetrix platform</p>
@@ -249,17 +235,26 @@ export default function AdminDashboard() {
                 <Button 
                   variant="outline" 
                   className="flex items-center gap-2 hover:bg-gray-50 transition-colors"
-                  onClick={() => alert('Export functionality coming soon!')}
+                  onClick={() => {
+                    const baseUrl = typeof window !== 'undefined' && window.location.origin
+                      ? window.location.origin
+                      : 'http://localhost:3000'
+                    window.location.href = `${baseUrl}/dashboard`
+                  }}
+                >
+                  <User className="w-4 h-4" />
+                  Customer Portal
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                  onClick={() => {
+                    // TODO: Implement export functionality
+                    console.log('Export functionality coming soon!')
+                  }}
                 >
                   <Download className="w-4 h-4" />
                   Export Data
-                </Button>
-                <Button 
-                  className="bg-gradient-to-r from-kentucky-blue-600 to-kentucky-blue-700 hover:from-kentucky-blue-700 hover:to-kentucky-blue-800 flex items-center gap-2 text-white shadow-lg transition-all duration-200 hover:shadow-xl"
-                  onClick={() => alert('Add new item functionality coming soon!')}
-                >
-                  <Plus className="w-4 h-4" />
-                  Add New
                 </Button>
               </div>
             </div>
@@ -306,7 +301,7 @@ export default function AdminDashboard() {
                       <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{DASHBOARD_STATS.totalUsers.toLocaleString()}</div>
+                      <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
                       <p className="text-xs text-muted-foreground">+12% from last month</p>
                     </CardContent>
                   </Card>
@@ -319,7 +314,7 @@ export default function AdminDashboard() {
                       <CreditCard className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{DASHBOARD_STATS.activeSubscriptions.toLocaleString()}</div>
+                      <div className="text-2xl font-bold">{stats.activeSubscriptions.toLocaleString()}</div>
                       <p className="text-xs text-muted-foreground">+8% from last month</p>
                     </CardContent>
                   </Card>
@@ -332,8 +327,8 @@ export default function AdminDashboard() {
                       <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">${DASHBOARD_STATS.monthlyRevenue.toLocaleString()}</div>
-                      <p className="text-xs text-muted-foreground">+{DASHBOARD_STATS.growthRate}% from last month</p>
+                      <div className="text-2xl font-bold">${stats.monthlyRevenue.toLocaleString()}</div>
+                      <p className="text-xs text-muted-foreground">+{stats.growthRate}% from last month</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -345,7 +340,7 @@ export default function AdminDashboard() {
                       <ShoppingBag className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{DASHBOARD_STATS.totalOrders.toLocaleString()}</div>
+                      <div className="text-2xl font-bold">{stats.totalOrders.toLocaleString()}</div>
                       <p className="text-xs text-muted-foreground">+15% from last month</p>
                     </CardContent>
                   </Card>
@@ -358,7 +353,7 @@ export default function AdminDashboard() {
                       <Activity className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{DASHBOARD_STATS.growthRate}%</div>
+                      <div className="text-2xl font-bold">{stats.growthRate}%</div>
                       <p className="text-xs text-muted-foreground">Monthly growth</p>
                     </CardContent>
                   </Card>
@@ -376,7 +371,7 @@ export default function AdminDashboard() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {RECENT_ORDERS.map((order) => (
+                      {orders.slice(0, 3).map((order) => (
                         <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div>
                             <p className="font-medium text-gray-900">{order.id}</p>
@@ -390,6 +385,9 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                       ))}
+                      {orders.length === 0 && (
+                        <p className="text-gray-500 text-center py-4">No recent orders</p>
+                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -403,7 +401,7 @@ export default function AdminDashboard() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {RECENT_USERS.map((user) => (
+                      {users.slice(0, 3).map((user) => (
                         <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div>
                             <p className="font-medium text-gray-900">{user.name}</p>
@@ -417,6 +415,9 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                       ))}
+                      {users.length === 0 && (
+                        <p className="text-gray-500 text-center py-4">No users yet</p>
+                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -425,221 +426,43 @@ export default function AdminDashboard() {
 
             {/* Users Tab */}
             <TabsContent value="users" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>User Management</CardTitle>
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          placeholder="Search users..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-10 w-64"
-                        />
-                      </div>
-                      <Select>
-                        <SelectTrigger className="w-32">
-                          <Filter className="w-4 h-4 mr-2" />
-                          <SelectValue placeholder="Filter" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Users</SelectItem>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {RECENT_USERS.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-kentucky-blue-100 rounded-full flex items-center justify-center">
-                            <User className="w-5 h-5 text-kentucky-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{user.name}</p>
-                            <p className="text-sm text-gray-600">{user.email}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Badge className={getPlanColor(user.plan)}>
-                            {user.plan}
-                          </Badge>
-                          <div className="flex items-center gap-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleViewItem(user.id, 'user')}
-                              className="hover:bg-kentucky-blue-50 hover:border-kentucky-blue-300 hover:text-kentucky-blue-600 transition-colors"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEditItem(user.id, 'user')}
-                              className="hover:bg-kentucky-blue-50 hover:border-kentucky-blue-300 hover:text-kentucky-blue-600 transition-colors"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Products Tab */}
-            <TabsContent value="products" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Product Management</CardTitle>
-                    <Button 
-                      className="bg-gradient-to-r from-kentucky-blue-600 to-kentucky-blue-700 hover:from-kentucky-blue-700 hover:to-kentucky-blue-800 text-white shadow-lg transition-all duration-200 hover:shadow-xl"
-                      onClick={() => alert('Add product functionality coming soon!')}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Product
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {PRODUCTS.map((product) => (
-                      <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                            <Package className="w-6 h-6 text-gray-400" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{product.name}</p>
-                            <p className="text-sm text-gray-600">{product.category}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-6">
-                          <div className="text-right">
-                            <p className="font-semibold">${product.price}</p>
-                            <p className="text-sm text-gray-600">Stock: {product.stock}</p>
-                          </div>
-                          <Badge className={getStatusColor(product.status)}>
-                            {product.status === 'out_of_stock' ? 'Out of Stock' : 'Active'}
-                          </Badge>
-                          <div className="flex items-center gap-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEditItem(product.id, 'product')}
-                              className="hover:bg-kentucky-blue-50 hover:border-kentucky-blue-300 hover:text-kentucky-blue-600 transition-colors"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleDeleteItem(product.id, 'product')}
-                              className="hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <UserManager users={users} onRefresh={() => fetchData()} />
             </TabsContent>
 
             {/* Orders Tab */}
             <TabsContent value="orders" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Order Management</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {RECENT_ORDERS.map((order) => (
-                      <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-kentucky-blue-100 rounded-full flex items-center justify-center">
-                            <ShoppingBag className="w-5 h-5 text-kentucky-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{order.id}</p>
-                            <p className="text-sm text-gray-600">{order.customer} • {order.items} items</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <p className="font-semibold">${order.total}</p>
-                            <p className="text-sm text-gray-600">{order.date}</p>
-                          </div>
-                          <Badge className={getStatusColor(order.status)}>
-                            {order.status}
-                          </Badge>
-                          <div className="flex items-center gap-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleViewItem(order.id, 'order')}
-                              className="hover:bg-kentucky-blue-50 hover:border-kentucky-blue-300 hover:text-kentucky-blue-600 transition-colors"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEditItem(order.id, 'order')}
-                              className="hover:bg-kentucky-blue-50 hover:border-kentucky-blue-300 hover:text-kentucky-blue-600 transition-colors"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <OrderManager orders={orders} onRefresh={() => fetchData()} />
+            </TabsContent>
+
+            {/* Products Tab */}
+            <TabsContent value="products" className="space-y-6">
+              <ProductManager products={products} onRefresh={() => fetchData()} />
             </TabsContent>
 
             {/* Analytics Tab */}
             <TabsContent value="analytics" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Revenue Analytics</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                      <p className="text-gray-500">Revenue chart placeholder</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle>User Growth</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                      <p className="text-gray-500">User growth chart placeholder</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Analytics Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-500 text-center py-8">Analytics dashboard coming soon</p>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
       </div>
+      
+      <Footer />
     </div>
+  )
+}
+
+export default function AdminPage() {
+  return (
+    <AdminGuard>
+      <AdminDashboard />
+    </AdminGuard>
   )
 }

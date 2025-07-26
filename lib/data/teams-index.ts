@@ -231,6 +231,348 @@ export const NBA_TEAMS: Record<string, TeamData> = {
     playoff_appearances: 22,
     arena: "Rocket Mortgage FieldHouse",
     location: "Cleveland, Ohio"
+  },
+  bucks: {
+    id: "bucks",
+    name: "Bucks",
+    city: "Milwaukee",
+    fullName: "Milwaukee Bucks",
+    abbreviation: "MIL",
+    league: "NBA",
+    conference: "Eastern",
+    division: "Central",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612749/primary/L/logo.svg",
+    primary_color: "#00471B",
+    secondary_color: "#EEE1C6",
+    founded: 1968,
+    championships: 2,
+    playoff_appearances: 33,
+    arena: "Fiserv Forum",
+    location: "Milwaukee, Wisconsin"
+  },
+  pistons: {
+    id: "pistons",
+    name: "Pistons",
+    city: "Detroit",
+    fullName: "Detroit Pistons",
+    abbreviation: "DET",
+    league: "NBA",
+    conference: "Eastern",
+    division: "Central",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612765/primary/L/logo.svg",
+    primary_color: "#C8102E",
+    secondary_color: "#006BB6",
+    founded: 1941,
+    championships: 3,
+    playoff_appearances: 41,
+    arena: "Little Caesars Arena",
+    location: "Detroit, Michigan"
+  },
+  pacers: {
+    id: "pacers",
+    name: "Pacers",
+    city: "Indiana",
+    fullName: "Indiana Pacers",
+    abbreviation: "IND",
+    league: "NBA",
+    conference: "Eastern",
+    division: "Central",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612754/primary/L/logo.svg",
+    primary_color: "#002D62",
+    secondary_color: "#FDBB30",
+    founded: 1967,
+    championships: 0,
+    playoff_appearances: 32,
+    arena: "Gainbridge Fieldhouse",
+    location: "Indianapolis, Indiana"
+  },
+  hawks: {
+    id: "hawks",
+    name: "Hawks",
+    city: "Atlanta",
+    fullName: "Atlanta Hawks",
+    abbreviation: "ATL",
+    league: "NBA",
+    conference: "Eastern",
+    division: "Southeast",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612737/primary/L/logo.svg",
+    primary_color: "#E03A3E",
+    secondary_color: "#C1D32F",
+    founded: 1946,
+    championships: 1,
+    playoff_appearances: 48,
+    arena: "State Farm Arena",
+    location: "Atlanta, Georgia"
+  },
+  magic: {
+    id: "magic",
+    name: "Magic",
+    city: "Orlando",
+    fullName: "Orlando Magic",
+    abbreviation: "ORL",
+    league: "NBA",
+    conference: "Eastern",
+    division: "Southeast",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612753/primary/L/logo.svg",
+    primary_color: "#0077C0",
+    secondary_color: "#C4CED4",
+    founded: 1989,
+    championships: 0,
+    playoff_appearances: 16,
+    arena: "Amway Center",
+    location: "Orlando, Florida"
+  },
+  hornets: {
+    id: "hornets",
+    name: "Hornets",
+    city: "Charlotte",
+    fullName: "Charlotte Hornets",
+    abbreviation: "CHA",
+    league: "NBA",
+    conference: "Eastern",
+    division: "Southeast",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612766/primary/L/logo.svg",
+    primary_color: "#1D1160",
+    secondary_color: "#00788C",
+    founded: 1988,
+    championships: 0,
+    playoff_appearances: 10,
+    arena: "Spectrum Center",
+    location: "Charlotte, North Carolina"
+  },
+  wizards: {
+    id: "wizards",
+    name: "Wizards",
+    city: "Washington",
+    fullName: "Washington Wizards",
+    abbreviation: "WAS",
+    league: "NBA",
+    conference: "Eastern",
+    division: "Southeast",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612764/primary/L/logo.svg",
+    primary_color: "#002B5C",
+    secondary_color: "#E31837",
+    founded: 1961,
+    championships: 1,
+    playoff_appearances: 28,
+    arena: "Capital One Arena",
+    location: "Washington, D.C."
+  },
+  spurs: {
+    id: "spurs",
+    name: "Spurs",
+    city: "San Antonio",
+    fullName: "San Antonio Spurs",
+    abbreviation: "SAS",
+    league: "NBA",
+    conference: "Western",
+    division: "Southwest",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612759/primary/L/logo.svg",
+    primary_color: "#C4CED4",
+    secondary_color: "#000000",
+    founded: 1967,
+    championships: 5,
+    playoff_appearances: 46,
+    arena: "Frost Bank Center",
+    location: "San Antonio, Texas"
+  },
+  mavs: {
+    id: "mavs",
+    name: "Mavericks",
+    city: "Dallas",
+    fullName: "Dallas Mavericks",
+    abbreviation: "DAL",
+    league: "NBA",
+    conference: "Western",
+    division: "Southwest",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612742/primary/L/logo.svg",
+    primary_color: "#00538C",
+    secondary_color: "#002F5F",
+    founded: 1980,
+    championships: 1,
+    playoff_appearances: 24,
+    arena: "American Airlines Center",
+    location: "Dallas, Texas"
+  },
+  nuggets: {
+    id: "nuggets",
+    name: "Nuggets",
+    city: "Denver",
+    fullName: "Denver Nuggets",
+    abbreviation: "DEN",
+    league: "NBA",
+    conference: "Western",
+    division: "Northwest",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612743/primary/L/logo.svg",
+    primary_color: "#0E2240",
+    secondary_color: "#FEC524",
+    founded: 1967,
+    championships: 1,
+    playoff_appearances: 30,
+    arena: "Ball Arena",
+    location: "Denver, Colorado"
+  },
+  suns: {
+    id: "suns",
+    name: "Suns",
+    city: "Phoenix",
+    fullName: "Phoenix Suns",
+    abbreviation: "PHX",
+    league: "NBA",
+    conference: "Western",
+    division: "Pacific",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612756/primary/L/logo.svg",
+    primary_color: "#1D1160",
+    secondary_color: "#E56020",
+    founded: 1968,
+    championships: 0,
+    playoff_appearances: 31,
+    arena: "Footprint Center",
+    location: "Phoenix, Arizona"
+  },
+  clippers: {
+    id: "clippers",
+    name: "Clippers",
+    city: "LA",
+    fullName: "LA Clippers",
+    abbreviation: "LAC",
+    league: "NBA",
+    conference: "Western",
+    division: "Pacific",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612746/primary/L/logo.svg",
+    primary_color: "#C8102E",
+    secondary_color: "#1D428A",
+    founded: 1970,
+    championships: 0,
+    playoff_appearances: 19,
+    arena: "Intuit Dome",
+    location: "Inglewood, California"
+  },
+  grizzlies: {
+    id: "grizzlies",
+    name: "Grizzlies",
+    city: "Memphis",
+    fullName: "Memphis Grizzlies",
+    abbreviation: "MEM",
+    league: "NBA",
+    conference: "Western",
+    division: "Southwest",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612763/primary/L/logo.svg",
+    primary_color: "#5D76A9",
+    secondary_color: "#12173F",
+    founded: 1995,
+    championships: 0,
+    playoff_appearances: 13,
+    arena: "FedExForum",
+    location: "Memphis, Tennessee"
+  },
+  jazz: {
+    id: "jazz",
+    name: "Jazz",
+    city: "Utah",
+    fullName: "Utah Jazz",
+    abbreviation: "UTA",
+    league: "NBA",
+    conference: "Western",
+    division: "Northwest",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612762/primary/L/logo.svg",
+    primary_color: "#002B5C",
+    secondary_color: "#00471B",
+    founded: 1974,
+    championships: 0,
+    playoff_appearances: 31,
+    arena: "Delta Center",
+    location: "Salt Lake City, Utah"
+  },
+  kings: {
+    id: "kings",
+    name: "Kings",
+    city: "Sacramento",
+    fullName: "Sacramento Kings",
+    abbreviation: "SAC",
+    league: "NBA",
+    conference: "Western",
+    division: "Pacific",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612758/primary/L/logo.svg",
+    primary_color: "#5A2D81",
+    secondary_color: "#63727A",
+    founded: 1945,
+    championships: 1,
+    playoff_appearances: 30,
+    arena: "Golden 1 Center",
+    location: "Sacramento, California"
+  },
+  pelicans: {
+    id: "pelicans",
+    name: "Pelicans",
+    city: "New Orleans",
+    fullName: "New Orleans Pelicans",
+    abbreviation: "NOP",
+    league: "NBA",
+    conference: "Western",
+    division: "Southwest",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612740/primary/L/logo.svg",
+    primary_color: "#0C2340",
+    secondary_color: "#C8102E",
+    founded: 2002,
+    championships: 0,
+    playoff_appearances: 9,
+    arena: "Smoothie King Center",
+    location: "New Orleans, Louisiana"
+  },
+  rockets: {
+    id: "rockets",
+    name: "Rockets",
+    city: "Houston",
+    fullName: "Houston Rockets",
+    abbreviation: "HOU",
+    league: "NBA",
+    conference: "Western",
+    division: "Southwest",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612745/primary/L/logo.svg",
+    primary_color: "#CE1141",
+    secondary_color: "#000000",
+    founded: 1967,
+    championships: 2,
+    playoff_appearances: 34,
+    arena: "Toyota Center",
+    location: "Houston, Texas"
+  },
+  thunder: {
+    id: "thunder",
+    name: "Thunder",
+    city: "Oklahoma City",
+    fullName: "Oklahoma City Thunder",
+    abbreviation: "OKC",
+    league: "NBA",
+    conference: "Western",
+    division: "Northwest",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612760/primary/L/logo.svg",
+    primary_color: "#007AC1",
+    secondary_color: "#EF3B24",
+    founded: 1967,
+    championships: 1,
+    playoff_appearances: 34,
+    arena: "Paycom Center",
+    location: "Oklahoma City, Oklahoma"
+  },
+  blazers: {
+    id: "blazers",
+    name: "Trail Blazers",
+    city: "Portland",
+    fullName: "Portland Trail Blazers",
+    abbreviation: "POR",
+    league: "NBA",
+    conference: "Western",
+    division: "Northwest",
+    logo_url: "https://cdn.nba.com/logos/nba/1610612757/primary/L/logo.svg",
+    primary_color: "#E03A3E",
+    secondary_color: "#000000",
+    founded: 1970,
+    championships: 1,
+    playoff_appearances: 37,
+    arena: "Moda Center",
+    location: "Portland, Oregon"
   }
 }
 
@@ -358,9 +700,54 @@ export const ALL_TEAMS: Record<string, TeamData> = {
   ...WNBA_TEAMS
 }
 
+// NBA Team ID to Custom Key Mapping (all 30 NBA teams now included)
+const NBA_ID_TO_KEY: Record<string, string> = {
+  '1610612747': 'lakers', // Los Angeles Lakers
+  '1610612744': 'warriors', // Golden State Warriors
+  '1610612738': 'celtics', // Boston Celtics
+  '1610612748': 'heat', // Miami Heat
+  '1610612751': 'nets', // Brooklyn Nets
+  '1610612752': 'knicks', // New York Knicks
+  '1610612755': 'sixers', // Philadelphia 76ers
+  '1610612761': 'raptors', // Toronto Raptors
+  '1610612741': 'bulls', // Chicago Bulls
+  '1610612739': 'cavaliers', // Cleveland Cavaliers
+  '1610612749': 'bucks', // Milwaukee Bucks
+  '1610612765': 'pistons', // Detroit Pistons
+  '1610612754': 'pacers', // Indiana Pacers
+  '1610612737': 'hawks', // Atlanta Hawks
+  '1610612753': 'magic', // Orlando Magic
+  '1610612766': 'hornets', // Charlotte Hornets
+  '1610612764': 'wizards', // Washington Wizards
+  '1610612759': 'spurs', // San Antonio Spurs
+  '1610612742': 'mavs', // Dallas Mavericks
+  '1610612743': 'nuggets', // Denver Nuggets
+  '1610612756': 'suns', // Phoenix Suns
+  '1610612746': 'clippers', // LA Clippers
+  '1610612763': 'grizzlies', // Memphis Grizzlies
+  '1610612762': 'jazz', // Utah Jazz
+  '1610612758': 'kings', // Sacramento Kings
+  '1610612740': 'pelicans', // New Orleans Pelicans
+  '1610612745': 'rockets', // Houston Rockets
+  '1610612760': 'thunder', // Oklahoma City Thunder
+  '1610612757': 'blazers' // Portland Trail Blazers
+}
+
 // Utility functions for team data lookup
 export const getTeamById = (id: string): TeamData | null => {
-  return ALL_TEAMS[id] || null
+  // First try direct key lookup
+  const teamByKey = ALL_TEAMS[id]
+  if (teamByKey) return teamByKey
+  
+  // Try NBA ID to key mapping
+  const customKey = NBA_ID_TO_KEY[id]
+  if (customKey && ALL_TEAMS[customKey]) {
+    return ALL_TEAMS[customKey]
+  }
+  
+  // If not found, search by team.id field
+  const teamById = Object.values(ALL_TEAMS).find(team => team.id === id)
+  return teamById || null
 }
 
 export const getTeamsByLeague = (league: 'NBA' | 'WNBA'): TeamData[] => {

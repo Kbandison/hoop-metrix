@@ -1,8 +1,11 @@
+'use client'
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlayerImage } from "@/components/ui/player-image";
 import { Star, Trophy, Users, ShoppingBag, Crown, ArrowRight } from "lucide-react";
 import Navigation from "@/components/layout/navigation";
 import Footer from "@/components/layout/footer";
@@ -138,7 +141,7 @@ export default function Home() {
               <Link key={index} href={`/players/${player.id}?from=home`}>
                 <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer group overflow-hidden">
                   {/* Player Photo */}
-                  <div className="relative h-64 bg-gradient-to-br from-gray-200 to-gray-300 overflow-hidden">
+                  <div className="relative h-64 bg-gradient-to-br from-kentucky-blue-600 to-kentucky-blue-800 overflow-hidden">
                     <Image
                       src={player.image}
                       alt={player.name}
@@ -192,6 +195,175 @@ export default function Home() {
           <div className="text-center mt-12">
             <Link href="/players">
               <Button size="lg" className="bg-kentucky-blue-600 hover:bg-kentucky-blue-700">
+                View All Players
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Players Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
+              Featured Players
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Discover the stars making headlines in the NBA and WNBA
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Featured Player 1 - LeBron James */}
+            <Card className="overflow-hidden hover:shadow-xl transition-shadow">
+              <div className="relative h-64 bg-gradient-to-br from-purple-600 to-yellow-500">
+                <PlayerImage
+                  playerId="2544"
+                  playerName="LeBron James"
+                  league="NBA"
+                  className="object-cover w-full h-full"
+                />
+                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">#6</span>
+                </div>
+              </div>
+              <CardContent className="p-4">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">LeBron James</h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge variant="outline" className="text-sm">SF</Badge>
+                  <span className="text-sm text-gray-500">Lakers</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">23.2</div>
+                    <div className="text-xs text-gray-500">PPG</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">9.0</div>
+                    <div className="text-xs text-gray-500">RPG</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">8.9</div>
+                    <div className="text-xs text-gray-500">APG</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Featured Player 2 - Stephen Curry */}
+            <Card className="overflow-hidden hover:shadow-xl transition-shadow">
+              <div className="relative h-64 bg-gradient-to-br from-blue-600 to-yellow-400">
+                <PlayerImage
+                  playerId="201939"
+                  playerName="Stephen Curry"
+                  league="NBA"
+                  className="object-cover w-full h-full"
+                />
+                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">#30</span>
+                </div>
+              </div>
+              <CardContent className="p-4">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Stephen Curry</h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge variant="outline" className="text-sm">PG</Badge>
+                  <span className="text-sm text-gray-500">Warriors</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">26.4</div>
+                    <div className="text-xs text-gray-500">PPG</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">4.5</div>
+                    <div className="text-xs text-gray-500">RPG</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">5.1</div>
+                    <div className="text-xs text-gray-500">APG</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Featured Player 3 - A'ja Wilson */}
+            <Card className="overflow-hidden hover:shadow-xl transition-shadow">
+              <div className="relative h-64 bg-gradient-to-br from-red-600 to-black">
+                <PlayerImage
+                  playerId="1628886"
+                  playerName="A'ja Wilson"
+                  league="WNBA"
+                  className="object-cover w-full h-full"
+                />
+                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">#22</span>
+                </div>
+              </div>
+              <CardContent className="p-4">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">A'ja Wilson</h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge variant="outline" className="text-sm">F</Badge>
+                  <span className="text-sm text-gray-500">Aces</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">22.8</div>
+                    <div className="text-xs text-gray-500">PPG</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">9.4</div>
+                    <div className="text-xs text-gray-500">RPG</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">2.3</div>
+                    <div className="text-xs text-gray-500">APG</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Featured Player 4 - Breanna Stewart */}
+            <Card className="overflow-hidden hover:shadow-xl transition-shadow">
+              <div className="relative h-64 bg-gradient-to-br from-teal-500 to-black">
+                <PlayerImage
+                  playerId="203399"
+                  playerName="Breanna Stewart"
+                  league="WNBA"
+                  className="object-cover w-full h-full"
+                />
+                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">#30</span>
+                </div>
+              </div>
+              <CardContent className="p-4">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Breanna Stewart</h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge variant="outline" className="text-sm">F</Badge>
+                  <span className="text-sm text-gray-500">Liberty</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">23.0</div>
+                    <div className="text-xs text-gray-500">PPG</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">9.3</div>
+                    <div className="text-xs text-gray-500">RPG</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">3.8</div>
+                    <div className="text-xs text-gray-500">APG</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-12">
+            <Link href="/players">
+              <Button size="lg" className="bg-kentucky-blue-600 hover:bg-kentucky-blue-700 text-white px-8">
                 View All Players
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>

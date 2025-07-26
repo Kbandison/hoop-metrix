@@ -306,7 +306,6 @@ export async function GET(
         )
       `)
       .eq('id', resolvedParams.id)
-      .eq('is_active', true)
       .single()
 
     if (error) {
@@ -331,8 +330,6 @@ export async function GET(
         )
       `)
       .eq('position', player.position)
-      .eq('league', player.league)
-      .eq('is_active', true)
       .neq('id', resolvedParams.id)
       .limit(6)
 

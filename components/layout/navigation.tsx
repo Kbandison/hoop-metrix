@@ -2,15 +2,15 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { ShoppingCart, User } from 'lucide-react'
+import { ShoppingCart, User, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useCart } from '@/lib/contexts/cart-context'
 
 const navItems = [
   { name: 'Home', href: '/' },
   { name: 'Players', href: '/players' },
-  { name: 'Teams', href: '/teams' },
   { name: 'Shop', href: '/shop' },
   { name: 'Membership', href: '/membership' },
 ]
@@ -45,6 +45,40 @@ export default function Navigation() {
                 {item.name}
               </Link>
             ))}
+            
+            {/* Teams Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1 text-white text-sm font-medium hover:text-white/80 transition-colors">
+                Teams
+                <ChevronDown className="w-4 h-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link href="/teams" className="w-full flex items-center gap-2">
+                    <span className="text-blue-600">🏀</span>
+                    All Teams
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/teams?league=NBA" className="w-full flex items-center gap-2">
+                    <span className="text-blue-600">🏀</span>
+                    NBA Teams
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/teams?league=WNBA" className="w-full flex items-center gap-2">
+                    <span className="text-orange-600">🏀</span>
+                    WNBA Teams
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/teams?league=Custom" className="w-full flex items-center gap-2">
+                    <span className="text-purple-600">⭐</span>
+                    Custom Teams
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Right Side Actions */}

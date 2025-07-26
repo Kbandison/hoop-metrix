@@ -25,9 +25,8 @@ export async function GET(
     
     const { data: players, error } = await supabase
       .from('players')
-      .select('id, name, position, jersey_number')
+      .select('id, name, position, jersey_number, season_stats')
       .eq('team_id', teamId)
-      .eq('is_active', true)
       .order('jersey_number')
 
     if (error) {

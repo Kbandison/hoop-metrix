@@ -466,12 +466,18 @@ export default function AccountPage() {
                   <div className="flex items-center justify-between p-6 bg-kentucky-blue-50 rounded-lg">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-kentucky-blue-100 rounded-full flex items-center justify-center">
-                        <Star className="w-6 h-6 text-kentucky-blue-600" />
+                        {USER_DATA.subscription.plan === 'Free' ? (
+                          <User className="w-6 h-6 text-kentucky-blue-600" />
+                        ) : (
+                          <Crown className="w-6 h-6 text-kentucky-blue-600" />
+                        )}
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{USER_DATA.subscription.plan}</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {USER_DATA.subscription.plan === 'Pro Stats' ? 'HoopMetrix Premium' : USER_DATA.subscription.plan}
+                        </h3>
                         <p className="text-gray-600">
-                          ${USER_DATA.subscription.price}/{USER_DATA.subscription.interval}
+                          {USER_DATA.subscription.plan === 'Pro Stats' ? '$10.00' : '$0'}/{USER_DATA.subscription.interval}
                         </p>
                       </div>
                     </div>
@@ -486,8 +492,57 @@ export default function AccountPage() {
                   </div>
 
                   <div className="flex gap-4">
-                    <Button variant="outline">Change Plan</Button>
-                    <Button variant="outline">Cancel Subscription</Button>
+                    {USER_DATA.subscription.plan !== 'Free' ? (
+                      <>
+                        <Button variant="outline" onClick={async () => {
+                          try {
+                            const response = await fetch('/api/manage-subscription', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                customerId: 'cus_example', // Replace with actual customer ID
+                                action: 'manage',
+                              }),
+                            })
+                            const { url } = await response.json()
+                            if (url) window.location.href = url
+                          } catch (error) {
+                            console.error('Error:', error)
+                            alert('Something went wrong. Please try again.')
+                          }
+                        }}>
+                          Manage Subscription
+                        </Button>
+                        <Button variant="outline" onClick={async () => {
+                          if (!confirm('Are you sure you want to cancel your subscription?')) return
+                          try {
+                            const response = await fetch('/api/manage-subscription', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                customerId: 'cus_example', // Replace with actual customer ID
+                                action: 'cancel',
+                              }),
+                            })
+                            const result = await response.json()
+                            if (result.success) {
+                              alert(result.message)
+                              window.location.reload()
+                            }
+                          } catch (error) {
+                            console.error('Error:', error)
+                            alert('Something went wrong. Please try again.')
+                          }
+                        }}>
+                          Cancel Subscription
+                        </Button>
+                      </>
+                    ) : (
+                      <Button onClick={() => window.location.href = '/membership'}>
+                        <Crown className="w-4 h-4 mr-2" />
+                        Upgrade to Premium
+                      </Button>
+                    )}
                     <Button variant="outline">
                       <Download className="w-4 h-4 mr-2" />
                       Download Invoice

@@ -14,115 +14,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import Navigation from '@/components/layout/navigation'
 import Footer from '@/components/layout/footer'
 import { useCart } from '@/lib/contexts/cart-context'
+import { Product, ProductFilter, ProductSort, PRODUCT_CATEGORIES } from '@/lib/types/product'
+import { ProductsService } from '@/lib/services/products'
 
-interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
-  originalPrice?: number
-  category: string
-  team?: string
-  league?: string
-  images: string[]
-  inStock: boolean
-  rating: number
-  reviewCount: number
-  sizes?: string[]
-  colors?: string[]
-  featured: boolean
-}
-
-const MOCK_PRODUCTS: Product[] = [
-  {
-    id: '1',
-    name: 'Lakers #23 LeBron James Jersey',
-    description: 'Official NBA Swingman Jersey featuring LeBron James',
-    price: 119.99,
-    originalPrice: 139.99,
-    category: 'Jerseys',
-    team: 'Lakers',
-    league: 'NBA',
-    images: ['/placeholder-jersey.jpg'],
-    inStock: true,
-    rating: 4.8,
-    reviewCount: 234,
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-    colors: ['Purple', 'Gold', 'White'],
-    featured: true
-  },
-  {
-    id: '2',
-    name: 'Warriors Championship Hat',
-    description: '2022 NBA Champions Golden State Warriors Snapback',
-    price: 34.99,
-    category: 'Accessories',
-    team: 'Warriors',
-    league: 'NBA',
-    images: ['/placeholder-hat.jpg'],
-    inStock: true,
-    rating: 4.6,
-    reviewCount: 89,
-    featured: false
-  },
-  {
-    id: '3',
-    name: 'WNBA All-Star Basketball',
-    description: 'Official WNBA All-Star Game Basketball',
-    price: 24.99,
-    category: 'Equipment',
-    league: 'WNBA',
-    images: ['/placeholder-basketball.jpg'],
-    inStock: true,
-    rating: 4.9,
-    reviewCount: 156,
-    featured: true
-  },
-  {
-    id: '4',
-    name: 'NBA Logo Hoodie',
-    description: 'Classic NBA Logo Pullover Hoodie',
-    price: 69.99,
-    category: 'Apparel',
-    league: 'NBA',
-    images: ['/placeholder-hoodie.jpg'],
-    inStock: true,
-    rating: 4.5,
-    reviewCount: 312,
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-    colors: ['Black', 'Navy', 'Gray'],
-    featured: false
-  },
-  {
-    id: '5',
-    name: 'Phoenix Mercury #42 Griner Jersey',
-    description: 'Official WNBA Replica Jersey featuring Brittney Griner',
-    price: 89.99,
-    category: 'Jerseys',
-    team: 'Mercury',
-    league: 'WNBA',
-    images: ['/placeholder-wnba-jersey.jpg'],
-    inStock: true,
-    rating: 4.7,
-    reviewCount: 67,
-    sizes: ['S', 'M', 'L', 'XL'],
-    colors: ['Orange', 'Purple', 'Black'],
-    featured: true
-  },
-  {
-    id: '6',
-    name: 'NBA Playoffs Poster Set',
-    description: 'Commemorative poster set featuring NBA Playoffs highlights',
-    price: 19.99,
-    category: 'Collectibles',
-    league: 'NBA',
-    images: ['/placeholder-poster.jpg'],
-    inStock: true,
-    rating: 4.3,
-    reviewCount: 45,
-    featured: false
-  }
-]
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -162,16 +56,18 @@ const cardVariants = {
 }
 
 export default function ShopPage() {
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS)
-  const [loading, setLoading] = useState(false)
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<string>('')
   const [league, setLeague] = useState<string>('')
   const [sortBy, setSortBy] = useState<string>('featured')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [wishlist, setWishlist] = useState<string[]>([])
+  const [totalProducts, setTotalProducts] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
 
-  const categories = ['All', 'Jerseys', 'Apparel', 'Accessories', 'Equipment', 'Collectibles']
+  const categories = ['All', ...Object.keys(PRODUCT_CATEGORIES)]
   const leagues = ['All', 'NBA', 'WNBA']
   const sortOptions = [
     { value: 'featured', label: 'Featured' },
@@ -181,28 +77,48 @@ export default function ShopPage() {
     { value: 'newest', label: 'Newest' }
   ]
 
-  const filteredProducts = products
-    .filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) ||
-                           product.description.toLowerCase().includes(search.toLowerCase())
-      const matchesCategory = !category || category === 'All' || product.category === category
-      const matchesLeague = !league || league === 'All' || product.league === league
-      return matchesSearch && matchesCategory && matchesLeague
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'price-low':
-          return a.price - b.price
-        case 'price-high':
-          return b.price - a.price
-        case 'rating':
-          return b.rating - a.rating
-        case 'featured':
-          return b.featured ? 1 : -1
-        default:
-          return 0
+  // Fetch products based on current filters
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true)
+      
+      const filter: ProductFilter = {}
+      if (category && category !== 'All') filter.category = category
+      if (league && league !== 'All') filter.league = league
+      if (search) filter.search = search
+      
+      const sort: ProductSort = (() => {
+        switch (sortBy) {
+          case 'price-low': return { field: 'price', direction: 'asc' }
+          case 'price-high': return { field: 'price', direction: 'desc' }
+          case 'rating': return { field: 'rating', direction: 'desc' }
+          case 'newest': return { field: 'created_at', direction: 'desc' }
+          default: return { field: 'name', direction: 'asc' }
+        }
+      })()
+      
+      try {
+        const { products: fetchedProducts, total } = await ProductsService.getProducts(
+          filter, 
+          sort, 
+          currentPage, 
+          20
+        )
+        setProducts(fetchedProducts)
+        setTotalProducts(total)
+      } catch (error) {
+        console.error('Error fetching products:', error)
+        setProducts([])
+        setTotalProducts(0)
+      } finally {
+        setLoading(false)
       }
-    })
+    }
+
+    fetchProducts()
+  }, [search, category, league, sortBy, currentPage])
+
+  const filteredProducts = products
 
   const toggleWishlist = (productId: string) => {
     setWishlist(prev => 
@@ -219,10 +135,10 @@ export default function ShopPage() {
       id: product.id,
       name: product.name,
       price: product.price,
-      originalPrice: product.originalPrice,
-      image: '/placeholder-product.jpg',
+      originalPrice: product.original_price,
+      image: product.image_url,
       category: product.category,
-      inStock: product.inStock,
+      inStock: product.stock_quantity > 0,
       quantity: 1
     })
     openCart()
@@ -588,10 +504,13 @@ export default function ShopPage() {
                       {/* Product Image */}
                       <div className="relative h-80 bg-gradient-to-br from-brand-black-700/20 to-brand-grey-700/20 overflow-hidden">
                         <Image
-                          src="/placeholder-product.jpg"
+                          src={product.image_url}
                           alt={product.name}
                           fill
                           className="object-cover group-hover:scale-110 transition-transform duration-700"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/placeholder-product.jpg'
+                          }}
                         />
                         
                         {/* Gradient Overlay */}
@@ -613,7 +532,7 @@ export default function ShopPage() {
                         </Button>
 
                         {/* Sale Badge */}
-                        {product.originalPrice && (
+                        {product.original_price && (
                           <motion.div
                             className="absolute top-4 left-4"
                             initial={{ scale: 0, rotate: -90 }}
@@ -650,7 +569,7 @@ export default function ShopPage() {
                             size="sm"
                             className="bg-gradient-to-r from-brand-black-700 to-brand-grey-600 hover:from-brand-black-800 hover:to-brand-grey-700 text-white font-bold shadow-lg"
                             onClick={() => addToCart(product)}
-                            disabled={!product.inStock}
+                            disabled={product.stock_quantity <= 0}
                           >
                             <ShoppingCart className="w-4 h-4 mr-1" />
                             Add
@@ -695,7 +614,7 @@ export default function ShopPage() {
                               ))}
                             </div>
                             <span className="text-sm text-gray-300 font-medium">
-                              {product.rating} ({product.reviewCount} reviews)
+                              {product.rating} ({product.review_count} reviews)
                             </span>
                           </div>
 
@@ -704,13 +623,13 @@ export default function ShopPage() {
                             <span className="text-2xl font-black text-white">
                               ${product.price}
                             </span>
-                            {product.originalPrice && (
+                            {product.original_price && (
                               <>
                                 <span className="text-sm text-gray-400 line-through">
-                                  ${product.originalPrice}
+                                  ${product.original_price}
                                 </span>
                                 <Badge className="bg-red-500 text-white text-xs font-bold">
-                                  Save ${(product.originalPrice - product.price).toFixed(2)}
+                                  Save ${(product.original_price - product.price).toFixed(2)}
                                 </Badge>
                               </>
                             )}
@@ -718,10 +637,12 @@ export default function ShopPage() {
 
                           {/* Stock Status */}
                           <div className="flex items-center gap-2">
-                            {product.inStock ? (
+                            {product.stock_quantity > 0 ? (
                               <>
                                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                                <span className="text-green-400 font-semibold text-sm">In Stock</span>
+                                <span className="text-green-400 font-semibold text-sm">
+                                  In Stock ({product.stock_quantity} available)
+                                </span>
                               </>
                             ) : (
                               <>

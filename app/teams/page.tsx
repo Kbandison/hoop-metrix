@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -23,9 +24,11 @@ interface Team {
   logo_url: string
   primary_color: string | null
   secondary_color: string | null
-  founded: number | null
-  championships: number
-  playoff_appearances: number
+  conference: string | null
+  division: string | null
+  founded?: number | null
+  championships?: number
+  playoff_appearances?: number
 }
 
 interface Player {
@@ -95,11 +98,128 @@ const statsVariants = {
   }
 }
 
-export default function TeamsPage() {
+// Team colors mapping
+const getTeamColors = (teamName: string, league: string) => {
+  const teamColors: Record<string, { primary: string; secondary: string; gradient: string }> = {
+    // NBA Teams
+    'Lakers': { primary: '#552583', secondary: '#FDB927', gradient: 'linear-gradient(90deg, #552583, #FDB927)' },
+    'Warriors': { primary: '#1D428A', secondary: '#FFC72C', gradient: 'linear-gradient(90deg, #1D428A, #FFC72C)' },
+    'Celtics': { primary: '#007A33', secondary: '#BA9653', gradient: 'linear-gradient(90deg, #007A33, #BA9653)' },
+    'Bulls': { primary: '#CE1141', secondary: '#000000', gradient: 'linear-gradient(90deg, #CE1141, #000000)' },
+    'Heat': { primary: '#98002E', secondary: '#F9A01B', gradient: 'linear-gradient(90deg, #98002E, #F9A01B)' },
+    'Knicks': { primary: '#006BB6', secondary: '#F58426', gradient: 'linear-gradient(90deg, #006BB6, #F58426)' },
+    'Nets': { primary: '#000000', secondary: '#FFFFFF', gradient: 'linear-gradient(90deg, #000000, #444444)' },
+    '76ers': { primary: '#006BB6', secondary: '#ED174C', gradient: 'linear-gradient(90deg, #006BB6, #ED174C)' },
+    'Raptors': { primary: '#CE1141', secondary: '#000000', gradient: 'linear-gradient(90deg, #CE1141, #000000)' },
+    'Bucks': { primary: '#00471B', secondary: '#EEE1C6', gradient: 'linear-gradient(90deg, #00471B, #EEE1C6)' },
+    'Cavaliers': { primary: '#860038', secondary: '#FDBB30', gradient: 'linear-gradient(90deg, #860038, #FDBB30)' },
+    'Pistons': { primary: '#C8102E', secondary: '#006BB6', gradient: 'linear-gradient(90deg, #C8102E, #006BB6)' },
+    'Pacers': { primary: '#002D62', secondary: '#FDBB30', gradient: 'linear-gradient(90deg, #002D62, #FDBB30)' },
+    'Hawks': { primary: '#E03A3E', secondary: '#C1D32F', gradient: 'linear-gradient(90deg, #E03A3E, #C1D32F)' },
+    'Hornets': { primary: '#1D1160', secondary: '#00788C', gradient: 'linear-gradient(90deg, #1D1160, #00788C)' },
+    'Magic': { primary: '#0077C0', secondary: '#C4CED4', gradient: 'linear-gradient(90deg, #0077C0, #C4CED4)' },
+    'Wizards': { primary: '#002B5C', secondary: '#E31837', gradient: 'linear-gradient(90deg, #002B5C, #E31837)' },
+    'Mavericks': { primary: '#00538C', secondary: '#002F5F', gradient: 'linear-gradient(90deg, #00538C, #002F5F)' },
+    'Rockets': { primary: '#CE1141', secondary: '#000000', gradient: 'linear-gradient(90deg, #CE1141, #000000)' },
+    'Grizzlies': { primary: '#5D76A9', secondary: '#12173F', gradient: 'linear-gradient(90deg, #5D76A9, #12173F)' },
+    'Pelicans': { primary: '#0C2340', secondary: '#C8102E', gradient: 'linear-gradient(90deg, #0C2340, #C8102E)' },
+    'Spurs': { primary: '#C4CED4', secondary: '#000000', gradient: 'linear-gradient(90deg, #C4CED4, #000000)' },
+    'Nuggets': { primary: '#0E2240', secondary: '#FEC524', gradient: 'linear-gradient(90deg, #0E2240, #FEC524)' },
+    'Timberwolves': { primary: '#0C2340', secondary: '#236192', gradient: 'linear-gradient(90deg, #0C2340, #236192)' },
+    'Thunder': { primary: '#007AC1', secondary: '#EF3B24', gradient: 'linear-gradient(90deg, #007AC1, #EF3B24)' },
+    'Trail Blazers': { primary: '#E03A3E', secondary: '#000000', gradient: 'linear-gradient(90deg, #E03A3E, #000000)' },
+    'Jazz': { primary: '#002B5C', secondary: '#00471B', gradient: 'linear-gradient(90deg, #002B5C, #00471B)' },
+    'Clippers': { primary: '#C8102E', secondary: '#1D428A', gradient: 'linear-gradient(90deg, #C8102E, #1D428A)' },
+    'Kings': { primary: '#5A2D81', secondary: '#63727A', gradient: 'linear-gradient(90deg, #5A2D81, #63727A)' },
+    'Suns': { primary: '#1D1160', secondary: '#E56020', gradient: 'linear-gradient(90deg, #1D1160, #E56020)' },
+    
+    // WNBA Teams
+    'Aces': { primary: '#C8102E', secondary: '#000000', gradient: 'linear-gradient(90deg, #C8102E, #000000)' },
+    'Liberty': { primary: '#86CEBC', secondary: '#000000', gradient: 'linear-gradient(90deg, #86CEBC, #000000)' },
+    'Sky': { primary: '#418FDE', secondary: '#FDD023', gradient: 'linear-gradient(90deg, #418FDE, #FDD023)' },
+    'Storm': { primary: '#2C5234', secondary: '#FE5000', gradient: 'linear-gradient(90deg, #2C5234, #FE5000)' },
+    'Sun': { primary: '#E03A3E', secondary: '#F57C00', gradient: 'linear-gradient(90deg, #E03A3E, #F57C00)' },
+    'Dream': { primary: '#E03A3E', secondary: '#53565A', gradient: 'linear-gradient(90deg, #E03A3E, #53565A)' },
+    'Fever': { primary: '#E03A3E', secondary: '#FDBB30', gradient: 'linear-gradient(90deg, #E03A3E, #FDBB30)' },
+    'Lynx': { primary: '#236192', secondary: '#9EA2A2', gradient: 'linear-gradient(90deg, #236192, #9EA2A2)' },
+    'Mercury': { primary: '#201747', secondary: '#E56020', gradient: 'linear-gradient(90deg, #201747, #E56020)' },
+    'Mystics': { primary: '#E03A3E', secondary: '#002B5C', gradient: 'linear-gradient(90deg, #E03A3E, #002B5C)' },
+    'Wings': { primary: '#C4CED4', secondary: '#002B5C', gradient: 'linear-gradient(90deg, #C4CED4, #002B5C)' }
+  }
+  
+  // Find team colors by partial name match or common variations
+  const teamNameLower = teamName.toLowerCase()
+  const teamKey = Object.keys(teamColors).find(key => {
+    const keyLower = key.toLowerCase()
+    return teamNameLower.includes(keyLower) || 
+           keyLower.includes(teamNameLower) ||
+           // Handle specific mappings
+           (teamNameLower.includes('lakers') && keyLower === 'lakers') ||
+           (teamNameLower.includes('warriors') && keyLower === 'warriors') ||
+           (teamNameLower.includes('celtics') && keyLower === 'celtics') ||
+           (teamNameLower.includes('bulls') && keyLower === 'bulls') ||
+           (teamNameLower.includes('heat') && keyLower === 'heat') ||
+           (teamNameLower.includes('knicks') && keyLower === 'knicks') ||
+           (teamNameLower.includes('nets') && keyLower === 'nets') ||
+           (teamNameLower.includes('sixers') && keyLower === '76ers') ||
+           (teamNameLower.includes('76ers') && keyLower === '76ers') ||
+           (teamNameLower.includes('raptors') && keyLower === 'raptors') ||
+           (teamNameLower.includes('bucks') && keyLower === 'bucks') ||
+           (teamNameLower.includes('cavaliers') && keyLower === 'cavaliers') ||
+           (teamNameLower.includes('pistons') && keyLower === 'pistons') ||
+           (teamNameLower.includes('pacers') && keyLower === 'pacers') ||
+           (teamNameLower.includes('hawks') && keyLower === 'hawks') ||
+           (teamNameLower.includes('hornets') && keyLower === 'hornets') ||
+           (teamNameLower.includes('magic') && keyLower === 'magic') ||
+           (teamNameLower.includes('wizards') && keyLower === 'wizards') ||
+           (teamNameLower.includes('mavericks') && keyLower === 'mavericks') ||
+           (teamNameLower.includes('rockets') && keyLower === 'rockets') ||
+           (teamNameLower.includes('grizzlies') && keyLower === 'grizzlies') ||
+           (teamNameLower.includes('pelicans') && keyLower === 'pelicans') ||
+           (teamNameLower.includes('spurs') && keyLower === 'spurs') ||
+           (teamNameLower.includes('nuggets') && keyLower === 'nuggets') ||
+           (teamNameLower.includes('timberwolves') && keyLower === 'timberwolves') ||
+           (teamNameLower.includes('thunder') && keyLower === 'thunder') ||
+           (teamNameLower.includes('trail blazers') && keyLower === 'trail blazers') ||
+           (teamNameLower.includes('jazz') && keyLower === 'jazz') ||
+           (teamNameLower.includes('clippers') && keyLower === 'clippers') ||
+           (teamNameLower.includes('kings') && keyLower === 'kings') ||
+           (teamNameLower.includes('suns') && keyLower === 'suns') ||
+           // WNBA teams
+           (teamNameLower.includes('aces') && keyLower === 'aces') ||
+           (teamNameLower.includes('liberty') && keyLower === 'liberty') ||
+           (teamNameLower.includes('sky') && keyLower === 'sky') ||
+           (teamNameLower.includes('storm') && keyLower === 'storm') ||
+           (teamNameLower.includes('sun') && keyLower === 'sun') ||
+           (teamNameLower.includes('dream') && keyLower === 'dream') ||
+           (teamNameLower.includes('fever') && keyLower === 'fever') ||
+           (teamNameLower.includes('lynx') && keyLower === 'lynx') ||
+           (teamNameLower.includes('mercury') && keyLower === 'mercury') ||
+           (teamNameLower.includes('mystics') && keyLower === 'mystics') ||
+           (teamNameLower.includes('wings') && keyLower === 'wings')
+  })
+  
+  if (teamKey) {
+    return teamColors[teamKey]
+  }
+  
+  // Default colors based on league
+  if (league === 'WNBA') {
+    return { primary: '#E03A3E', secondary: '#53565A', gradient: 'linear-gradient(90deg, #E03A3E, #53565A)' }
+  } else if (league === 'Custom') {
+    return { primary: '#8B5CF6', secondary: '#A855F7', gradient: 'linear-gradient(90deg, #8B5CF6, #A855F7)' }
+  } else {
+    return { primary: '#1e293b', secondary: '#475569', gradient: 'linear-gradient(90deg, #1e293b, #475569)' }
+  }
+}
+
+function TeamsPageContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [teams, setTeams] = useState<TeamWithPlayers[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [league, setLeague] = useState<string>('')
+  const [league, setLeague] = useState<string>(searchParams?.get('league') || '')
   const [page, setPage] = useState(1)
   const [pagination, setPagination] = useState({
     page: 1,
@@ -107,6 +227,15 @@ export default function TeamsPage() {
     total: 0,
     totalPages: 0
   })
+
+  // Watch for URL parameter changes and update state accordingly
+  useEffect(() => {
+    const urlLeague = searchParams?.get('league') || ''
+    if (urlLeague !== league) {
+      setLeague(urlLeague)
+      setPage(1) // Reset to first page when league changes
+    }
+  }, [searchParams, league])
 
   useEffect(() => {
     const fetchTeamsWithPlayers = async () => {
@@ -128,7 +257,7 @@ export default function TeamsPage() {
         const data: TeamsResponse = await response.json()
         const teamsData = data.teams || []
 
-        // Fetch players for each team
+        // Fetch players for each team (full roster)
         const teamsWithPlayers = await Promise.all(
           teamsData.map(async (team) => {
             try {
@@ -139,7 +268,7 @@ export default function TeamsPage() {
               }
               return { ...team, players: [] }
             } catch (error) {
-              console.error(`Error fetching players for team ${team.id}:`, error)
+              console.error(`Error fetching players for team ${team.name}:`, error)
               return { ...team, players: [] }
             }
           })
@@ -175,8 +304,13 @@ export default function TeamsPage() {
   }
 
   const handleLeagueChange = (value: string) => {
-    setLeague(value === 'all' ? '' : value)
+    const newLeague = value === 'all' ? '' : value
+    setLeague(newLeague)
     setPage(1)
+    
+    // Update URL to reflect the league change
+    const newUrl = newLeague ? `/teams?league=${newLeague}` : '/teams'
+    router.push(newUrl)
   }
 
   return (
@@ -202,7 +336,10 @@ export default function TeamsPage() {
               Team Directory
             </h1>
             <p className="text-lg md:text-xl text-gray-600 mb-6 mt-2">
-              Explore NBA and WNBA teams, their history, and current rosters
+              {league === 'Custom' 
+                ? 'Discover custom teams created by our community' 
+                : 'Explore NBA and WNBA teams, their history, and current rosters'
+              }
             </p>
             
             <motion.div 
@@ -211,18 +348,37 @@ export default function TeamsPage() {
               initial="hidden"
               animate="visible"
             >
-              <motion.div variants={statsVariants} className="text-center">
-                <div className="text-2xl font-bold text-kentucky-blue-600">{pagination?.total || 0}</div>
-                <div className="text-gray-500 text-sm">Total Teams</div>
-              </motion.div>
-              <motion.div variants={statsVariants} className="text-center">
-                <div className="text-2xl font-bold text-kentucky-blue-600">30</div>
-                <div className="text-gray-500 text-sm">NBA Teams</div>
-              </motion.div>
-              <motion.div variants={statsVariants} className="text-center">
-                <div className="text-2xl font-bold text-kentucky-blue-600">12</div>
-                <div className="text-gray-500 text-sm">WNBA Teams</div>
-              </motion.div>
+              {league === 'Custom' ? (
+                <>
+                  <motion.div variants={statsVariants} className="text-center">
+                    <div className="text-2xl font-bold text-purple-600">{pagination?.total || 0}</div>
+                    <div className="text-gray-500 text-sm">Custom Teams</div>
+                  </motion.div>
+                  <motion.div variants={statsVariants} className="text-center">
+                    <div className="text-2xl font-bold text-purple-600">⭐</div>
+                    <div className="text-gray-500 text-sm">Community Created</div>
+                  </motion.div>
+                  <motion.div variants={statsVariants} className="text-center">
+                    <div className="text-2xl font-bold text-purple-600">🎨</div>
+                    <div className="text-gray-500 text-sm">Unique Designs</div>
+                  </motion.div>
+                </>
+              ) : (
+                <>
+                  <motion.div variants={statsVariants} className="text-center">
+                    <div className="text-2xl font-bold text-kentucky-blue-600">{pagination?.total || 0}</div>
+                    <div className="text-gray-500 text-sm">Total Teams</div>
+                  </motion.div>
+                  <motion.div variants={statsVariants} className="text-center">
+                    <div className="text-2xl font-bold text-kentucky-blue-600">30</div>
+                    <div className="text-gray-500 text-sm">NBA Teams</div>
+                  </motion.div>
+                  <motion.div variants={statsVariants} className="text-center">
+                    <div className="text-2xl font-bold text-kentucky-blue-600">12</div>
+                    <div className="text-gray-500 text-sm">WNBA Teams</div>
+                  </motion.div>
+                </>
+              )}
             </motion.div>
           </motion.div>
         </div>
@@ -315,6 +471,12 @@ export default function TeamsPage() {
                         WNBA
                       </div>
                     </SelectItem>
+                    <SelectItem value="Custom" className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <span className="text-purple-600">⭐</span>
+                        Custom Teams
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </motion.div>
@@ -374,81 +536,106 @@ export default function TeamsPage() {
                           <Link href={`/teams/${team.id}`} className="hover:text-kentucky-blue-600 transition-colors">
                             <div className="flex items-center gap-3 mb-2">
                               <Image
-                                src={team.logo_url}
+                                src={team.logo_url || '/placeholder-team.svg'}
                                 alt={`${team.name} logo`}
                                 width={32}
                                 height={32}
                                 className="object-contain flex-shrink-0"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement
-                                  target.src = '/placeholder-team.svg'
+                                  if (target.src !== '/placeholder-team.svg') {
+                                    target.src = '/placeholder-team.svg'
+                                  }
                                 }}
                               />
-                              <h3 className="text-2xl font-bold text-gray-900">
-                                {team.city} {team.name}
-                              </h3>
+                              <div>
+                                <h3 className="text-2xl font-bold text-gray-900">
+                                  {team.city} {team.name}
+                                </h3>
+                                <p className="text-xs text-gray-500 mt-1">Click for details</p>
+                              </div>
                             </div>
                           </Link>
                           <div 
                             className="h-1 w-full rounded-full mb-4"
                             style={{
-                              background: team.primary_color 
-                                ? `linear-gradient(90deg, ${team.primary_color}, ${team.secondary_color || team.primary_color})`
-                                : 'linear-gradient(90deg, #1e293b, #475569)'
+                              background: getTeamColors(team.name, team.league).gradient
                             }}
                           />
-                          <div className="flex items-center gap-2 mb-4">
-                            <Badge 
-                              variant="secondary" 
-                              className={`${
-                                team.league === 'NBA' 
-                                  ? 'bg-blue-100 text-blue-800' 
-                                  : 'bg-purple-100 text-purple-800'
-                              } font-semibold`}
-                            >
-                              {team.league}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              {team.abbreviation}
-                            </Badge>
-                            {team.championships > 0 && (
-                              <div className="flex items-center gap-1 text-yellow-600">
-                                <Trophy className="h-4 w-4" />
-                                <span className="text-sm font-semibold">{team.championships}</span>
-                              </div>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant="secondary" 
+                                className={`${
+                                  team.league === 'NBA' 
+                                    ? 'bg-blue-100 text-blue-800' 
+                                    : team.league === 'WNBA'
+                                    ? 'bg-purple-100 text-purple-800'
+                                    : 'bg-violet-100 text-violet-800'
+                                } font-semibold`}
+                              >
+                                {team.league}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {team.abbreviation}
+                              </Badge>
+                              {team.championships && team.championships > 0 && (
+                                <div className="flex items-center gap-1 text-yellow-600">
+                                  <Trophy className="h-4 w-4" />
+                                  <span className="text-sm font-semibold">{team.championships}</span>
+                                </div>
+                              )}
+                            </div>
+                            {team.conference && team.conference !== team.league && (
+                              <span className="text-sm text-gray-600 font-medium">
+                                {team.conference} Conference
+                              </span>
                             )}
                           </div>
                         </div>
 
-                        {/* Players List */}
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">
-                            Current Roster
-                          </h4>
-                          {team.players && team.players.length > 0 ? (
-                            team.players.map((player) => (
-                              <Link 
-                                key={player.id} 
-                                href={`/players/${player.id}?from=teams`}
-                                className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors group/player"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <span className="text-sm font-mono text-gray-500 w-8">
-                                    #{player.jersey_number}
-                                  </span>
-                                  <span className="font-medium text-gray-900 group-hover/player:text-kentucky-blue-600 transition-colors">
-                                    {player.name}
-                                  </span>
-                                </div>
-                                <Badge variant="outline" className="text-xs">
-                                  {player.position}
-                                </Badge>
-                              </Link>
-                            ))
-                          ) : (
-                            <p className="text-gray-500 text-sm italic">No players available</p>
-                          )}
-                        </div>
+                        {/* Full Roster */}
+                        {team.players && team.players.length > 0 ? (
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">
+                              Full Roster ({team.players.length} players)
+                            </h4>
+                            <div className="space-y-2">
+                              {team.players.map((player) => (
+                                <Link 
+                                  key={player.id} 
+                                  href={`/players/${player.id}`}
+                                  className="block py-2 px-3 rounded-lg bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-xs font-bold text-gray-500 min-w-[1.5rem]">
+                                        #{player.jersey_number}
+                                      </span>
+                                      <span className="text-sm font-medium text-gray-900">
+                                        {player.name}
+                                      </span>
+                                    </div>
+                                    <span className="text-xs text-gray-600 font-medium">
+                                      {player.position}
+                                    </span>
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">
+                              Team Info
+                            </h4>
+                            <div className="py-3 px-3 rounded-lg bg-gray-50 border border-gray-200">
+                              <div className="text-center text-gray-500">
+                                No roster available
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -510,5 +697,20 @@ export default function TeamsPage() {
       
       <Footer />
     </div>
+  )
+}
+
+export default function TeamsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-kentucky-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading teams...</p>
+        </div>
+      </div>
+    }>
+      <TeamsPageContent />
+    </Suspense>
   )
 }

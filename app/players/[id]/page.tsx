@@ -13,7 +13,76 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { PlayerImage } from '@/components/ui/player-image'
 import Navigation from '@/components/layout/navigation'
+
+// Team colors mapping function
+const getTeamColors = (teamName: string, league: string) => {
+  const teamColors: Record<string, { primary: string; secondary: string }> = {
+    // NBA Teams
+    'Lakers': { primary: '#552583', secondary: '#FDB927' },
+    'Warriors': { primary: '#1D428A', secondary: '#FFC72C' },
+    'Celtics': { primary: '#007A33', secondary: '#BA9653' },
+    'Bulls': { primary: '#CE1141', secondary: '#000000' },
+    'Heat': { primary: '#98002E', secondary: '#F9A01B' },
+    'Knicks': { primary: '#006BB6', secondary: '#F58426' },
+    'Nets': { primary: '#000000', secondary: '#FFFFFF' },
+    '76ers': { primary: '#006BB6', secondary: '#ED174C' },
+    'Raptors': { primary: '#CE1141', secondary: '#000000' },
+    'Bucks': { primary: '#00471B', secondary: '#EEE1C6' },
+    'Cavaliers': { primary: '#860038', secondary: '#FDBB30' },
+    'Pistons': { primary: '#C8102E', secondary: '#006BB6' },
+    'Pacers': { primary: '#002D62', secondary: '#FDBB30' },
+    'Hawks': { primary: '#E03A3E', secondary: '#C1D32F' },
+    'Hornets': { primary: '#1D1160', secondary: '#00788C' },
+    'Magic': { primary: '#0077C0', secondary: '#C4CED4' },
+    'Wizards': { primary: '#002B5C', secondary: '#E31837' },
+    'Mavericks': { primary: '#00538C', secondary: '#002F5F' },
+    'Rockets': { primary: '#CE1141', secondary: '#000000' },
+    'Grizzlies': { primary: '#5D76A9', secondary: '#12173F' },
+    'Pelicans': { primary: '#0C2340', secondary: '#C8102E' },
+    'Spurs': { primary: '#C4CED4', secondary: '#000000' },
+    'Nuggets': { primary: '#0E2240', secondary: '#FEC524' },
+    'Timberwolves': { primary: '#0C2340', secondary: '#236192' },
+    'Thunder': { primary: '#007AC1', secondary: '#EF3B24' },
+    'Trail Blazers': { primary: '#E03A3E', secondary: '#000000' },
+    'Jazz': { primary: '#002B5C', secondary: '#00471B' },
+    'Clippers': { primary: '#C8102E', secondary: '#1D428A' },
+    'Kings': { primary: '#5A2D81', secondary: '#63727A' },
+    'Suns': { primary: '#1D1160', secondary: '#E56020' },
+    
+    // WNBA Teams
+    'Aces': { primary: '#C8102E', secondary: '#000000' },
+    'Liberty': { primary: '#86CEBC', secondary: '#000000' },
+    'Sky': { primary: '#418FDE', secondary: '#FDD023' },
+    'Storm': { primary: '#2C5234', secondary: '#FE5000' },
+    'Sun': { primary: '#E03A3E', secondary: '#F57C00' },
+    'Dream': { primary: '#E03A3E', secondary: '#53565A' },
+    'Fever': { primary: '#E03A3E', secondary: '#FDBB30' },
+    'Lynx': { primary: '#236192', secondary: '#9EA2A2' },
+    'Mercury': { primary: '#201747', secondary: '#E56020' },
+    'Mystics': { primary: '#E03A3E', secondary: '#002B5C' },
+    'Wings': { primary: '#C4CED4', secondary: '#002B5C' }
+  }
+  
+  // Find team colors by partial name match
+  const teamNameLower = teamName.toLowerCase()
+  const teamKey = Object.keys(teamColors).find(key => {
+    const keyLower = key.toLowerCase()
+    return teamNameLower.includes(keyLower) || keyLower.includes(teamNameLower)
+  })
+  
+  if (teamKey) {
+    return teamColors[teamKey]
+  }
+  
+  // Default colors based on league
+  if (league === 'WNBA') {
+    return { primary: '#E03A3E', secondary: '#53565A' }
+  } else {
+    return { primary: '#1e293b', secondary: '#475569' }
+  }
+}
 
 interface PlayerData {
   player: {
@@ -80,7 +149,6 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
   const searchParams = useSearchParams()
   const [data, setData] = useState<PlayerData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [imageError, setImageError] = useState(false)
 
   // Determine back navigation based on where user came from
   const getBackNavigation = () => {
@@ -208,11 +276,11 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       
       {/* Hero Section */}
       <div 
-        className="relative min-h-[65vh] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden pt-32 pb-16"
+        className="relative min-h-[65vh] text-white overflow-hidden pt-32 pb-16"
         style={{
           background: player.teams.primary_color 
-            ? `linear-gradient(135deg, ${player.teams.primary_color}dd, ${player.teams.secondary_color || player.teams.primary_color}dd, #1e293bdd)`
-            : undefined
+            ? `linear-gradient(135deg, ${player.teams.primary_color}, ${player.teams.secondary_color || player.teams.primary_color}, #1e293b)`
+            : `linear-gradient(135deg, ${getTeamColors(player.teams.name, player.teams.league).primary}, ${getTeamColors(player.teams.name, player.teams.league).secondary}, #1e293b)`
         }}
       >
         {/* Background Pattern */}
@@ -242,14 +310,19 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, type: "spring" as const, stiffness: 100 }}
             >
-              <div className="relative h-96 lg:h-[500px] bg-gradient-to-br from-white/10 to-white/5 rounded-2xl overflow-hidden backdrop-blur-sm border border-white/20">
-                <Image
-                  src={imageError ? '/placeholder-player.svg' : player.photo_url}
-                  alt={player.name}
-                  fill
-                  className="object-cover"
-                  onError={() => setImageError(true)}
-                  priority
+              <div 
+                className="relative h-96 lg:h-[500px] rounded-2xl overflow-hidden backdrop-blur-sm border border-white/20"
+                style={{
+                  background: player.teams.primary_color 
+                    ? `linear-gradient(135deg, ${player.teams.primary_color}88, ${player.teams.secondary_color || player.teams.primary_color}88)`
+                    : `linear-gradient(135deg, ${getTeamColors(player.teams.name, player.teams.league).primary}88, ${getTeamColors(player.teams.name, player.teams.league).secondary}88)`
+                }}
+              >
+                <PlayerImage
+                  playerId={player.id}
+                  playerName={player.name}
+                  league={player.teams.league}
+                  className="object-cover w-full h-full"
                 />
                 
                 {/* Jersey Number Overlay */}
@@ -582,10 +655,14 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                         >
-                          <Avatar className="w-12 h-12">
-                            <AvatarImage src={similarPlayer.photo_url} alt={similarPlayer.name} />
-                            <AvatarFallback>{similarPlayer.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                          </Avatar>
+                          <div className="w-12 h-12 rounded-full overflow-hidden">
+                            <PlayerImage
+                              playerId={similarPlayer.id}
+                              playerName={similarPlayer.name}
+                              league={player.teams.league}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-sm truncate">{similarPlayer.name}</div>
                             <div className="flex items-center gap-1 text-xs text-gray-500">
