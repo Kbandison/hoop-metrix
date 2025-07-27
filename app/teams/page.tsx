@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useMemo, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
@@ -26,9 +26,6 @@ interface Team {
   secondary_color: string | null
   conference: string | null
   division: string | null
-  founded?: number | null
-  championships?: number
-  playoff_appearances?: number
 }
 
 interface Player {
@@ -66,23 +63,23 @@ const cardVariants = {
   hidden: { 
     opacity: 0, 
     y: 50,
-    scale: 0.9
+    scale: 0.95
   },
   visible: { 
     opacity: 1, 
     y: 0,
     scale: 1,
     transition: {
-      type: "spring" as const,
+      type: "spring",
       stiffness: 100,
       damping: 15
     }
   },
   hover: {
-    y: -10,
-    scale: 1.05,
+    y: -8,
+    scale: 1.02,
     transition: {
-      type: "spring" as const,
+      type: "spring",
       stiffness: 400,
       damping: 10
     }
@@ -219,91 +216,82 @@ function TeamsPageContent() {
   const [teams, setTeams] = useState<TeamWithPlayers[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [league, setLeague] = useState<string>(searchParams?.get('league') || '')
+  const [league, setLeague] = useState<string>('')
   const [page, setPage] = useState(1)
+  const [isInitialized, setIsInitialized] = useState(false)
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 20,
+    limit: 12,
     total: 0,
     totalPages: 0
   })
 
-  // Watch for URL parameter changes and update state accordingly
+  // Initialize from URL parameters
   useEffect(() => {
     const urlLeague = searchParams?.get('league') || ''
-    if (urlLeague !== league) {
-      setLeague(urlLeague)
-      setPage(1) // Reset to first page when league changes
-    }
-  }, [searchParams, league])
+    setLeague(urlLeague)
+    setPage(1)
+    setIsInitialized(true)
+  }, [searchParams])
 
   useEffect(() => {
-    const fetchTeamsWithPlayers = async () => {
-      setLoading(true)
-      try {
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: '20',
-          ...(search && { search }),
-          ...(league && { league }),
-        })
+    // Only fetch data after initialization
+    if (!isInitialized) return
 
-        const response = await fetch(`/api/teams?${params}`)
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        
-        const data: TeamsResponse = await response.json()
-        const teamsData = data.teams || []
-
-        // Fetch players for each team (full roster)
-        const teamsWithPlayers = await Promise.all(
-          teamsData.map(async (team) => {
-            try {
-              const playersResponse = await fetch(`/api/teams/${team.id}/players`)
-              if (playersResponse.ok) {
-                const playersData = await playersResponse.json()
-                return { ...team, players: playersData.players || [] }
-              }
-              return { ...team, players: [] }
-            } catch (error) {
-              console.error(`Error fetching players for team ${team.name}:`, error)
-              return { ...team, players: [] }
-            }
+    // Debounce search to reduce API calls
+    const timeoutId = setTimeout(() => {
+      const fetchTeamsWithPlayers = async () => {
+        setLoading(true)
+        try {
+          const params = new URLSearchParams({
+            page: page.toString(),
+            limit: '12', // Reduced from 20 to 12 for better performance
+            ...(search && { search }),
+            ...(league && { league }),
           })
-        )
 
-        setTeams(teamsWithPlayers)
-        setPagination(data.pagination || {
-          page: 1,
-          limit: 20,
-          total: 0,
-          totalPages: 0
-        })
-      } catch (error) {
-        console.error('Error fetching teams:', error)
-        setTeams([])
-        setPagination({
-          page: 1,
-          limit: 20,
-          total: 0,
-          totalPages: 0
-        })
-      } finally {
-        setLoading(false)
+          const response = await fetch(`/api/teams-with-players?${params}`)
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+          
+          const data: TeamsResponse = await response.json()
+          const teamsWithPlayers = data.teams || []
+
+          setTeams(teamsWithPlayers)
+          setPagination(data.pagination || {
+            page: 1,
+            limit: 12,
+            total: 0,
+            totalPages: 0
+          })
+        } catch (error) {
+          console.error('Error fetching teams:', error)
+          setTeams([])
+          setPagination({
+            page: 1,
+            limit: 12,
+            total: 0,
+            totalPages: 0
+          })
+        } finally {
+          setLoading(false)
+        }
       }
-    }
 
-    fetchTeamsWithPlayers()
-  }, [page, search, league])
+      fetchTeamsWithPlayers()
+    }, search ? 500 : 0) // 500ms debounce for search, immediate for other changes
 
-  const handleSearch = (value: string) => {
+    return () => clearTimeout(timeoutId)
+  }, [page, search, league, isInitialized])
+
+  const handleSearch = useCallback((value: string) => {
     setSearch(value)
     setPage(1)
-  }
+  }, [])
 
-  const handleLeagueChange = (value: string) => {
+  const handleLeagueChange = useCallback((value: string) => {
     const newLeague = value === 'all' ? '' : value
     setLeague(newLeague)
     setPage(1)
@@ -311,6 +299,92 @@ function TeamsPageContent() {
     // Update URL to reflect the league change
     const newUrl = newLeague ? `/teams?league=${newLeague}` : '/teams'
     router.push(newUrl)
+  }, [router])
+
+  // Use getTeamColors directly since it's already optimized
+  
+  const statsContent = useMemo(() => {
+    if (league === 'Custom') {
+      return (
+        <>
+          <motion.div variants={statsVariants} className="text-center">
+            <div className="text-2xl font-bold text-purple-600">{pagination?.total || 0}</div>
+            <div className="text-gray-700 text-sm">Custom Teams</div>
+          </motion.div>
+          <motion.div variants={statsVariants} className="text-center">
+            <div className="text-2xl font-bold text-purple-600">⭐</div>
+            <div className="text-gray-700 text-sm">Community Created</div>
+          </motion.div>
+          <motion.div variants={statsVariants} className="text-center">
+            <div className="text-2xl font-bold text-purple-600">🎨</div>
+            <div className="text-gray-700 text-sm">Unique Designs</div>
+          </motion.div>
+        </>
+      )
+    } else if (league === 'NBA') {
+      return (
+        <>
+          <motion.div variants={statsVariants} className="text-center">
+            <div className="text-2xl font-bold text-kentucky-blue-600">{pagination?.total || 0}</div>
+            <div className="text-gray-700 text-sm">NBA Teams</div>
+          </motion.div>
+          <motion.div variants={statsVariants} className="text-center">
+            <div className="text-2xl font-bold text-kentucky-blue-600">🏀</div>
+            <div className="text-gray-700 text-sm">Professional League</div>
+          </motion.div>
+          <motion.div variants={statsVariants} className="text-center">
+            <div className="text-2xl font-bold text-kentucky-blue-600">30</div>
+            <div className="text-gray-700 text-sm">Total in League</div>
+          </motion.div>
+        </>
+      )
+    } else if (league === 'WNBA') {
+      return (
+        <>
+          <motion.div variants={statsVariants} className="text-center">
+            <div className="text-2xl font-bold text-kentucky-blue-600">{pagination?.total || 0}</div>
+            <div className="text-gray-700 text-sm">WNBA Teams</div>
+          </motion.div>
+          <motion.div variants={statsVariants} className="text-center">
+            <div className="text-2xl font-bold text-kentucky-blue-600">🏀</div>
+            <div className="text-gray-700 text-sm">Women's League</div>
+          </motion.div>
+          <motion.div variants={statsVariants} className="text-center">
+            <div className="text-2xl font-bold text-kentucky-blue-600">13</div>
+            <div className="text-gray-700 text-sm">Total in League</div>
+          </motion.div>
+        </>
+      )
+    } else {
+      return (
+        <>
+          <motion.div variants={statsVariants} className="text-center">
+            <div className="text-2xl font-bold text-kentucky-blue-600">{pagination?.total || 0}</div>
+            <div className="text-gray-700 text-sm">Total Teams</div>
+          </motion.div>
+          <motion.div variants={statsVariants} className="text-center">
+            <div className="text-2xl font-bold text-kentucky-blue-600">30</div>
+            <div className="text-gray-700 text-sm">NBA Teams</div>
+          </motion.div>
+          <motion.div variants={statsVariants} className="text-center">
+            <div className="text-2xl font-bold text-kentucky-blue-600">13</div>
+            <div className="text-gray-700 text-sm">WNBA Teams</div>
+          </motion.div>
+        </>
+      )
+    }
+  }, [league, pagination?.total])
+
+  // Only render after initialization to prevent race conditions
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-kentucky-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading teams...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -348,37 +422,7 @@ function TeamsPageContent() {
               initial="hidden"
               animate="visible"
             >
-              {league === 'Custom' ? (
-                <>
-                  <motion.div variants={statsVariants} className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">{pagination?.total || 0}</div>
-                    <div className="text-gray-500 text-sm">Custom Teams</div>
-                  </motion.div>
-                  <motion.div variants={statsVariants} className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">⭐</div>
-                    <div className="text-gray-500 text-sm">Community Created</div>
-                  </motion.div>
-                  <motion.div variants={statsVariants} className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">🎨</div>
-                    <div className="text-gray-500 text-sm">Unique Designs</div>
-                  </motion.div>
-                </>
-              ) : (
-                <>
-                  <motion.div variants={statsVariants} className="text-center">
-                    <div className="text-2xl font-bold text-kentucky-blue-600">{pagination?.total || 0}</div>
-                    <div className="text-gray-500 text-sm">Total Teams</div>
-                  </motion.div>
-                  <motion.div variants={statsVariants} className="text-center">
-                    <div className="text-2xl font-bold text-kentucky-blue-600">30</div>
-                    <div className="text-gray-500 text-sm">NBA Teams</div>
-                  </motion.div>
-                  <motion.div variants={statsVariants} className="text-center">
-                    <div className="text-2xl font-bold text-kentucky-blue-600">12</div>
-                    <div className="text-gray-500 text-sm">WNBA Teams</div>
-                  </motion.div>
-                </>
-              )}
+              {statsContent}
             </motion.div>
           </motion.div>
         </div>
@@ -409,13 +453,10 @@ function TeamsPageContent() {
                 <Trophy className="w-5 h-5 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-800">Find Basketball Teams</h3>
-              <div className="ml-auto flex items-center gap-2 text-sm text-gray-500">
-                <motion.div
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
+              <div className="ml-auto flex items-center gap-2 text-sm text-gray-700">
+                <div>
                   🏆
-                </motion.div>
+                </div>
                 <span className="font-medium">{pagination?.total || 0} teams available</span>
               </div>
             </motion.div>
@@ -452,26 +493,26 @@ function TeamsPageContent() {
                   <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-kentucky-blue-500 rounded-xl font-medium">
                     <SelectValue placeholder="All Leagues" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="font-medium">
+                  <SelectContent className="bg-white text-gray-900 border border-gray-200 shadow-lg">
+                    <SelectItem value="all" className="font-medium text-gray-900 hover:bg-gray-100">
                       <div className="flex items-center gap-2">
                         <span>🏆</span>
                         All Leagues
                       </div>
                     </SelectItem>
-                    <SelectItem value="NBA" className="font-medium">
+                    <SelectItem value="NBA" className="font-medium text-gray-900 hover:bg-gray-100">
                       <div className="flex items-center gap-2">
                         <span className="text-blue-600">🏀</span>
                         NBA
                       </div>
                     </SelectItem>
-                    <SelectItem value="WNBA" className="font-medium">
+                    <SelectItem value="WNBA" className="font-medium text-gray-900 hover:bg-gray-100">
                       <div className="flex items-center gap-2">
                         <span className="text-orange-600">🏀</span>
                         WNBA
                       </div>
                     </SelectItem>
-                    <SelectItem value="Custom" className="font-medium">
+                    <SelectItem value="Custom" className="font-medium text-gray-900 hover:bg-gray-100">
                       <div className="flex items-center gap-2">
                         <span className="text-purple-600">⭐</span>
                         Custom Teams
@@ -497,7 +538,7 @@ function TeamsPageContent() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                {Array.from({ length: 6 }).map((_, i) => (
+                {Array.from({ length: 4 }).map((_, i) => (
                   <Card key={i} className="overflow-hidden">
                     <CardContent className="p-6">
                       <Skeleton className="h-8 w-3/4 mb-4" />
@@ -527,7 +568,7 @@ function TeamsPageContent() {
                   <motion.div
                     key={team.id}
                     variants={cardVariants}
-                    className="group"
+                    whileHover="hover"
                   >
                     <Card className="overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300">
                       <CardContent className="p-6">
@@ -536,7 +577,13 @@ function TeamsPageContent() {
                           <Link href={`/teams/${team.id}`} className="hover:text-kentucky-blue-600 transition-colors">
                             <div className="flex items-center gap-3 mb-2">
                               <Image
-                                src={team.logo_url || '/placeholder-team.svg'}
+                                src={
+                                  team.logo_url && 
+                                  !team.logo_url.includes('example.com') && 
+                                  team.logo_url !== '' 
+                                    ? team.logo_url 
+                                    : '/placeholder-team.svg'
+                                }
                                 alt={`${team.name} logo`}
                                 width={32}
                                 height={32}
@@ -552,7 +599,7 @@ function TeamsPageContent() {
                                 <h3 className="text-2xl font-bold text-gray-900">
                                   {team.city} {team.name}
                                 </h3>
-                                <p className="text-xs text-gray-500 mt-1">Click for details</p>
+                                <p className="text-xs text-gray-700 mt-1">Click for details</p>
                               </div>
                             </div>
                           </Link>
@@ -579,12 +626,6 @@ function TeamsPageContent() {
                               <Badge variant="outline" className="text-xs">
                                 {team.abbreviation}
                               </Badge>
-                              {team.championships && team.championships > 0 && (
-                                <div className="flex items-center gap-1 text-yellow-600">
-                                  <Trophy className="h-4 w-4" />
-                                  <span className="text-sm font-semibold">{team.championships}</span>
-                                </div>
-                              )}
                             </div>
                             {team.conference && team.conference !== team.league && (
                               <span className="text-sm text-gray-600 font-medium">
@@ -609,7 +650,7 @@ function TeamsPageContent() {
                                 >
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                      <span className="text-xs font-bold text-gray-500 min-w-[1.5rem]">
+                                      <span className="text-xs font-bold text-gray-700 min-w-[1.5rem]">
                                         #{player.jersey_number}
                                       </span>
                                       <span className="text-sm font-medium text-gray-900">
@@ -630,7 +671,7 @@ function TeamsPageContent() {
                               Team Info
                             </h4>
                             <div className="py-3 px-3 rounded-lg bg-gray-50 border border-gray-200">
-                              <div className="text-center text-gray-500">
+                              <div className="text-center text-gray-700">
                                 No roster available
                               </div>
                             </div>

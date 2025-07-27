@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         
         // Handle one-time payment success
         // You can add order fulfillment logic here
-        console.log('Payment succeeded:', paymentIntent.id)
+        // Payment succeeded - order fulfillment logic can be added here
         
         break
       }
@@ -74,13 +74,13 @@ export async function POST(request: NextRequest) {
         const paymentIntent = event.data.object
         
         // Handle payment failure
-        console.log('Payment failed:', paymentIntent.id)
+        // Payment failed - notification logic can be added here
         
         break
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        // Unhandled event type - can be logged for future implementation
     }
 
     return NextResponse.json({ received: true })

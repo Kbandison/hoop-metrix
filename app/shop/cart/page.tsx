@@ -64,7 +64,7 @@ export default function CartPage() {
           >
             <ShoppingBag className="w-24 h-24 text-gray-300 mx-auto mb-6" />
             <h2 className="text-2xl font-bold text-gray-600 mb-4">Your cart is empty</h2>
-            <p className="text-gray-500 mb-8 max-w-md mx-auto">
+            <p className="text-gray-700 mb-8 max-w-md mx-auto">
               Looks like you haven't added any items to your cart yet. Start shopping to fill it up!
             </p>
             <Link href="/shop">
@@ -139,7 +139,7 @@ export default function CartPage() {
                                 ${item.price.toFixed(2)}
                               </span>
                               {item.originalPrice && (
-                                <span className="text-sm text-gray-500 line-through">
+                                <span className="text-sm text-gray-700 line-through">
                                   ${item.originalPrice.toFixed(2)}
                                 </span>
                               )}
@@ -199,7 +199,7 @@ export default function CartPage() {
                 <CardHeader>
                   <CardTitle>Order Summary</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 text-gray-900 [&_label]:text-gray-900 [&_label]:font-medium [&_input]:bg-white [&_input]:text-gray-900 [&_button]:text-gray-900">
                   {/* Promo Code */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -213,12 +213,12 @@ export default function CartPage() {
 
                   {/* Order Breakdown */}
                   <div className="space-y-3 py-4 border-t border-gray-200">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm text-gray-900">
                       <span>Subtotal ({totalItems} items)</span>
                       <span>${totalAmount.toFixed(2)}</span>
                     </div>
                     
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm text-gray-900">
                       <span>Shipping</span>
                       <span>
                         {shippingCost === 0 ? (
@@ -229,20 +229,20 @@ export default function CartPage() {
                       </span>
                     </div>
                     
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm text-gray-900">
                       <span>Tax</span>
                       <span>${tax.toFixed(2)}</span>
                     </div>
                     
                     {totalAmount < 75 && (
-                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                      <div className="text-xs text-gray-700 bg-gray-50 p-2 rounded">
                         Add ${(75 - totalAmount).toFixed(2)} more for free shipping!
                       </div>
                     )}
                   </div>
 
                   {/* Total */}
-                  <div className="flex justify-between text-lg font-bold pt-4 border-t border-gray-200">
+                  <div className="flex justify-between text-lg font-bold pt-4 border-t border-gray-200 text-gray-900">
                     <span>Total</span>
                     <span>${finalTotal.toFixed(2)}</span>
                   </div>
@@ -257,7 +257,7 @@ export default function CartPage() {
 
                   {/* Security Features */}
                   <div className="text-center pt-4 border-t border-gray-200">
-                    <div className="text-xs text-gray-500 space-y-1">
+                    <div className="text-xs text-gray-700 space-y-1">
                       <div>🔒 Secure checkout with SSL encryption</div>
                       <div>📦 Free returns within 30 days</div>
                       <div>🏆 100% authentic products</div>

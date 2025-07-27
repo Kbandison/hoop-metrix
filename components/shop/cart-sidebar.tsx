@@ -203,7 +203,7 @@ export default function CartSidebar() {
 
             {/* Footer */}
             {items.length > 0 && (
-              <div className="border-t p-6 space-y-4">
+              <div className="border-t p-6 space-y-4 text-gray-900">
                 {/* Total */}
                 <div className="flex items-center justify-between text-lg font-bold">
                   <span>Total ({totalItems} items):</span>

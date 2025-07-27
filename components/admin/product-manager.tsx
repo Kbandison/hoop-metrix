@@ -186,7 +186,7 @@ export default function ProductManager({ products, onRefresh }: ProductManagerPr
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Package className="h-6 w-6" />
-            <CardTitle className="text-xl">Product Management</CardTitle>
+            <CardTitle className="text-xl text-white">Product Management</CardTitle>
           </div>
           <Button 
             onClick={handleAddProduct}

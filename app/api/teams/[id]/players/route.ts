@@ -7,11 +7,14 @@ export async function GET(
 ) {
   try {
     const { id: teamId } = await params
+    console.log('API: Fetching players for team ID:', teamId)
 
     // Check if Supabase is configured
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       // Use indexed data when Supabase is not configured
+      console.log('API: Using indexed data (Supabase not configured)')
       const players = getPlayersByTeam(teamId)
+      console.log('API: Found', players.length, 'players for team:', teamId)
       
       return NextResponse.json({
         players,

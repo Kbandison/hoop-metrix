@@ -733,6 +733,22 @@ const NBA_ID_TO_KEY: Record<string, string> = {
   '1610612757': 'blazers' // Portland Trail Blazers
 }
 
+// WNBA Team ID to Custom Key Mapping (all 12 WNBA teams)
+const WNBA_ID_TO_KEY: Record<string, string> = {
+  '1611661314': 'aces', // Las Vegas Aces
+  '1611661316': 'liberty', // New York Liberty
+  '1611661315': 'sky', // Chicago Sky
+  '1611661322': 'storm', // Seattle Storm
+  '1611661318': 'sun', // Connecticut Sun
+  '1611661313': 'dream', // Atlanta Dream
+  '1611661317': 'fever', // Indiana Fever
+  '1611661320': 'lynx', // Minnesota Lynx
+  '1611661321': 'mercury', // Phoenix Mercury
+  '1611661319': 'mystics', // Washington Mystics
+  '1611661323': 'wings', // Dallas Wings
+  '1611661324': 'sparks' // Los Angeles Sparks
+}
+
 // Utility functions for team data lookup
 export const getTeamById = (id: string): TeamData | null => {
   // First try direct key lookup
@@ -740,9 +756,15 @@ export const getTeamById = (id: string): TeamData | null => {
   if (teamByKey) return teamByKey
   
   // Try NBA ID to key mapping
-  const customKey = NBA_ID_TO_KEY[id]
-  if (customKey && ALL_TEAMS[customKey]) {
-    return ALL_TEAMS[customKey]
+  const nbaCustomKey = NBA_ID_TO_KEY[id]
+  if (nbaCustomKey && ALL_TEAMS[nbaCustomKey]) {
+    return ALL_TEAMS[nbaCustomKey]
+  }
+  
+  // Try WNBA ID to key mapping
+  const wnbaCustomKey = WNBA_ID_TO_KEY[id]
+  if (wnbaCustomKey && ALL_TEAMS[wnbaCustomKey]) {
+    return ALL_TEAMS[wnbaCustomKey]
   }
   
   // If not found, search by team.id field

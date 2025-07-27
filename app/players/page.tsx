@@ -306,7 +306,7 @@ export default function PlayersPage() {
                 <Users className="w-5 h-5 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-800">Find Basketball Players</h3>
-              <div className="ml-auto flex items-center gap-2 text-sm text-gray-500">
+              <div className="ml-auto flex items-center gap-2 text-sm text-gray-700">
                 <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
@@ -349,20 +349,20 @@ export default function PlayersPage() {
                   <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-kentucky-blue-500 rounded-xl font-medium">
                     <SelectValue placeholder="All Leagues" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="font-medium">
+                  <SelectContent className="bg-white text-gray-900 border border-gray-200 shadow-lg">
+                    <SelectItem value="all" className="font-medium text-gray-900 hover:bg-gray-100">
                       <div className="flex items-center gap-2">
                         <span>🏆</span>
                         All Leagues
                       </div>
                     </SelectItem>
-                    <SelectItem value="NBA" className="font-medium">
+                    <SelectItem value="NBA" className="font-medium text-gray-900 hover:bg-gray-100">
                       <div className="flex items-center gap-2">
                         <span className="text-blue-600">🏀</span>
                         NBA
                       </div>
                     </SelectItem>
-                    <SelectItem value="WNBA" className="font-medium">
+                    <SelectItem value="WNBA" className="font-medium text-gray-900 hover:bg-gray-100">
                       <div className="flex items-center gap-2">
                         <span className="text-orange-600">🏀</span>
                         WNBA
@@ -384,13 +384,13 @@ export default function PlayersPage() {
                   <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-kentucky-blue-500 rounded-xl font-medium">
                     <SelectValue placeholder="All Positions" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="font-medium">All Positions</SelectItem>
-                    <SelectItem value="PG" className="font-medium">Point Guard</SelectItem>
-                    <SelectItem value="SG" className="font-medium">Shooting Guard</SelectItem>
-                    <SelectItem value="SF" className="font-medium">Small Forward</SelectItem>
-                    <SelectItem value="PF" className="font-medium">Power Forward</SelectItem>
-                    <SelectItem value="C" className="font-medium">Center</SelectItem>
+                  <SelectContent className="bg-white text-gray-900 border border-gray-200 shadow-lg">
+                    <SelectItem value="all" className="font-medium text-gray-900 hover:bg-gray-100">All Positions</SelectItem>
+                    <SelectItem value="PG" className="font-medium text-gray-900 hover:bg-gray-100">Point Guard</SelectItem>
+                    <SelectItem value="SG" className="font-medium text-gray-900 hover:bg-gray-100">Shooting Guard</SelectItem>
+                    <SelectItem value="SF" className="font-medium text-gray-900 hover:bg-gray-100">Small Forward</SelectItem>
+                    <SelectItem value="PF" className="font-medium text-gray-900 hover:bg-gray-100">Power Forward</SelectItem>
+                    <SelectItem value="C" className="font-medium text-gray-900 hover:bg-gray-100">Center</SelectItem>
                   </SelectContent>
                 </Select>
               </motion.div>
@@ -441,7 +441,7 @@ export default function PlayersPage() {
                   >
                     <Link href={`/players/${player.id}?from=players`}>
                       <Card className="overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
-                        <CardContent className="p-0">
+                        <CardContent className="p-0 text-gray-900">
                           {/* Player Image */}
                           <div 
                             className="relative h-80 overflow-hidden"
@@ -496,8 +496,8 @@ export default function PlayersPage() {
                           </div>
 
                           {/* Player Info */}
-                          <div className="p-6">
-                            <h3 className="font-bold text-xl mb-2 group-hover:text-kentucky-blue-600 transition-colors">
+                          <div className="p-6 bg-white text-gray-900">
+                            <h3 className="font-bold text-xl mb-2 text-gray-900 group-hover:text-kentucky-blue-600 transition-colors">
                               {player.name}
                             </h3>
                             
@@ -518,17 +518,17 @@ export default function PlayersPage() {
                             </div>
 
                             {/* Physical Stats */}
-                            <div className="flex justify-between text-sm text-gray-500 mb-4">
+                            <div className="flex justify-between text-sm text-gray-900 mb-4">
                               {player.height && (
-                                <div>
-                                  <div className="font-medium">Height</div>
-                                  <div>{player.height}</div>
+                                <div className="text-gray-900">
+                                  <div className="font-medium text-gray-900">Height</div>
+                                  <div className="text-gray-700">{player.height}</div>
                                 </div>
                               )}
                               {player.weight && (
-                                <div>
-                                  <div className="font-medium">Weight</div>
-                                  <div>{player.weight}</div>
+                                <div className="text-gray-900">
+                                  <div className="font-medium text-gray-900">Weight</div>
+                                  <div className="text-gray-700">{player.weight}</div>
                                 </div>
                               )}
                             </div>
@@ -539,19 +539,19 @@ export default function PlayersPage() {
                                 {player.season_stats.pts && (
                                   <div className="text-center">
                                     <div className="font-bold text-kentucky-blue-600">{player.season_stats.pts}</div>
-                                    <div className="text-xs text-brand-grey-500">PPG</div>
+                                    <div className="text-xs text-gray-900">PPG</div>
                                   </div>
                                 )}
                                 {player.season_stats.reb && (
                                   <div className="text-center">
-                                    <div className="font-bold text-brand-black-700">{player.season_stats.reb}</div>
-                                    <div className="text-xs text-brand-grey-500">RPG</div>
+                                    <div className="font-bold text-gray-900">{player.season_stats.reb}</div>
+                                    <div className="text-xs text-gray-900">RPG</div>
                                   </div>
                                 )}
                                 {player.season_stats.ast && (
                                   <div className="text-center">
-                                    <div className="font-bold text-brand-grey-600">{player.season_stats.ast}</div>
-                                    <div className="text-xs text-brand-grey-500">APG</div>
+                                    <div className="font-bold text-gray-900">{player.season_stats.ast}</div>
+                                    <div className="text-xs text-gray-900">APG</div>
                                   </div>
                                 )}
                               </div>

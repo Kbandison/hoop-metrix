@@ -9,73 +9,16 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
 
-    // Handle Custom league separately
+    // Handle Custom league separately - return empty result since no custom teams exist
     if (league === 'Custom') {
-      // Check if Supabase is configured for custom teams
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        return NextResponse.json({
-          teams: [],
-          pagination: { page, limit, total: 0, totalPages: 0 }
-        })
-      }
-
-      const { createClient } = await import('@/lib/supabase/server')
-      const supabase = await createClient()
-      const offset = (page - 1) * limit
-      
-      let query = supabase
-        .from('teams')
-        .select('*')
-        .eq('league', 'Custom')
-        .order('name')
-        .range(offset, offset + limit - 1)
-
-      if (search) {
-        query = query.or(`name.ilike.%${search}%,city.ilike.%${search}%`)
-      }
-
-      const { data: teams, error } = await query
-
-      if (error) {
-        console.error('Error fetching custom teams:', error)
-        return NextResponse.json({ error: 'Failed to fetch custom teams' }, { status: 500 })
-      }
-
-      // Get total count for pagination
-      let countQuery = supabase
-        .from('teams')
-        .select('*', { count: 'exact', head: true })
-        .eq('league', 'Custom')
-
-      if (search) countQuery = countQuery.or(`name.ilike.%${search}%,city.ilike.%${search}%`)
-
-      const { count, error: countError } = await countQuery
-
-      if (countError) {
-        console.error('Error counting custom teams:', countError)
-      }
-
-      // Clean up any broken image URLs before returning
-      const cleanedTeams = teams?.map(team => ({
-        ...team,
-        logo_url: team.logo_url?.includes('1594736797933-d0401ba2fe65') 
-          ? '/placeholder-team.svg' 
-          : team.logo_url
-      })) || []
-
       return NextResponse.json({
-        teams: cleanedTeams,
-        pagination: {
-          page,
-          limit,
-          total: count || 0,
-          totalPages: Math.ceil((count || 0) / limit)
-        }
+        teams: [],
+        pagination: { page, limit, total: 0, totalPages: 0 }
       })
     }
 
-    // For NBA/WNBA teams, use indexed data when Supabase is not configured or as fallback
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || (league && ['NBA', 'WNBA'].includes(league))) {
+    // Use indexed data only when Supabase is not configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       // Use indexed data for NBA/WNBA teams
       let filteredTeams = Object.values(ALL_TEAMS)
       

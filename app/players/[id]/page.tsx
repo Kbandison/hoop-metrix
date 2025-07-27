@@ -462,7 +462,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* Content Section */}
-      <div className="bg-gradient-to-br from-slate-50 to-white">
+      <div className="bg-gradient-to-br from-slate-50 to-white text-gray-900">
         <div className="container mx-auto px-4 py-12">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content */}
@@ -508,7 +508,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                             ))}
                           </motion.div>
                         ) : (
-                          <p className="text-gray-500 text-center py-8">
+                          <p className="text-gray-700 text-center py-8">
                             No season statistics available
                           </p>
                         )}
@@ -531,7 +531,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                         {player.bio ? (
                           <p className="text-gray-700 leading-relaxed">{player.bio}</p>
                         ) : (
-                          <p className="text-gray-500 text-center py-8">
+                          <p className="text-gray-700 text-center py-8">
                             No biography available
                           </p>
                         )}
@@ -573,7 +573,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                             ))}
                           </motion.div>
                         ) : (
-                          <p className="text-gray-500 text-center py-8">
+                          <p className="text-gray-700 text-center py-8">
                             No career statistics available
                           </p>
                         )}
@@ -609,11 +609,11 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <div className="text-sm text-gray-500 mb-1">Full Name</div>
+                    <div className="text-sm text-gray-700 mb-1">Full Name</div>
                     <div className="font-semibold">{player.teams.city} {player.teams.name}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500 mb-1">League</div>
+                    <div className="text-sm text-gray-700 mb-1">League</div>
                     <Badge className={
                       player.teams.league === 'NBA' 
                         ? 'bg-blue-500 hover:bg-blue-600' 
@@ -624,7 +624,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                   </div>
                   {player.birth_date && (
                     <div>
-                      <div className="text-sm text-gray-500 mb-1">Birth Date</div>
+                      <div className="text-sm text-gray-700 mb-1">Birth Date</div>
                       <div className="font-semibold">{formatDate(player.birth_date)}</div>
                     </div>
                   )}
@@ -665,7 +665,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-sm truncate">{similarPlayer.name}</div>
-                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <div className="flex items-center gap-1 text-xs text-gray-700">
                               <Image
                                 src={similarPlayer.teams.logo_url}
                                 alt="team logo"

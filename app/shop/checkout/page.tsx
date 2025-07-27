@@ -155,7 +155,7 @@ export default function CheckoutPage() {
     
     // Simulate API call
     setTimeout(() => {
-      console.log('Order submitted:', { formData, items, total: finalTotal })
+      // TODO: Implement order submission to database
       // Clear cart and redirect to success page
       clearCart()
       window.location.href = '/shop/order-confirmation'
@@ -207,10 +207,10 @@ export default function CheckoutPage() {
           </p>
         </motion.div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="[&_label]:text-gray-900 [&_label]:font-medium [&_input]:bg-white [&_input]:text-gray-900 [&_button]:text-gray-900 [&_select]:bg-white [&_select]:text-gray-900">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left Column - Forms */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-6 text-gray-900">
               {/* Contact Information */}
               <Card>
                 <CardHeader>
@@ -221,7 +221,7 @@ export default function CheckoutPage() {
                     Contact Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 text-gray-900">
                   <div>
                     <Label htmlFor="email">Email Address *</Label>
                     <Input
@@ -257,7 +257,7 @@ export default function CheckoutPage() {
                     Shipping Address
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 text-gray-900">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="firstName">First Name *</Label>
@@ -421,7 +421,7 @@ export default function CheckoutPage() {
                     Payment
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 text-gray-900">
                   <RadioGroup 
                     value={formData.paymentMethod} 
                     onValueChange={(value) => handleInputChange('paymentMethod', value)}
@@ -507,7 +507,7 @@ export default function CheckoutPage() {
                 <CardHeader>
                   <CardTitle>Order Summary</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 text-gray-900">
                   {/* Items */}
                   <div className="space-y-3 max-h-64 overflow-y-auto">
                     {items.map((item) => {
@@ -524,7 +524,7 @@ export default function CheckoutPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-sm line-clamp-1">{item.name}</h4>
-                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <div className="flex items-center gap-1 text-xs text-gray-700">
                               <span>Qty: {item.quantity}</span>
                               {item.selectedSize && <span>• {item.selectedSize}</span>}
                               {item.selectedColor && <span>• {item.selectedColor}</span>}
@@ -588,7 +588,7 @@ export default function CheckoutPage() {
 
                   {/* Security Info */}
                   <div className="text-center pt-4 border-t">
-                    <div className="text-xs text-gray-500 space-y-1">
+                    <div className="text-xs text-gray-700 space-y-1">
                       <div className="flex items-center justify-center gap-1">
                         <Shield className="w-3 h-3" />
                         <span>Secure checkout with SSL encryption</span>

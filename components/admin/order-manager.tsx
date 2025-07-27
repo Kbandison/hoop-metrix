@@ -122,7 +122,7 @@ export default function OrderManager({ orders, onRefresh }: OrderManagerProps) {
       <CardHeader className="bg-gradient-to-r from-kentucky-blue-600 to-kentucky-blue-700 text-white rounded-t-lg">
         <div className="flex items-center gap-3">
           <ShoppingBag className="h-6 w-6" />
-          <CardTitle className="text-xl">Order Management</CardTitle>
+          <CardTitle className="text-xl text-white">Order Management</CardTitle>
         </div>
       </CardHeader>
 

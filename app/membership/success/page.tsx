@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Navigation from '@/components/layout/navigation'
 import Footer from '@/components/layout/footer'
 
-export default function MembershipSuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams()
   const sessionId = searchParams.get('session_id')
   const [loading, setLoading] = useState(true)
@@ -131,7 +131,7 @@ export default function MembershipSuccessPage() {
                 </Button>
               </Link>
               
-              <Link href="/account">
+              <Link href="/dashboard">
                 <Button 
                   size="lg" 
                   variant="outline" 
@@ -164,5 +164,13 @@ export default function MembershipSuccessPage() {
       
       <Footer />
     </div>
+  )
+}
+
+export default function MembershipSuccessPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SuccessContent />
+    </Suspense>
   )
 }

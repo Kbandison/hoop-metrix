@@ -1,5 +1,53 @@
 // Players Data Index - Centralized player information for easy lookup and management
 
+// Team ID mapping constants (copied from teams-index to avoid circular imports)
+const NBA_ID_TO_KEY: Record<string, string> = {
+  '1610612747': 'lakers', // Los Angeles Lakers
+  '1610612744': 'warriors', // Golden State Warriors
+  '1610612738': 'celtics', // Boston Celtics
+  '1610612748': 'heat', // Miami Heat
+  '1610612751': 'nets', // Brooklyn Nets
+  '1610612752': 'knicks', // New York Knicks
+  '1610612755': 'sixers', // Philadelphia 76ers
+  '1610612761': 'raptors', // Toronto Raptors
+  '1610612741': 'bulls', // Chicago Bulls
+  '1610612739': 'cavaliers', // Cleveland Cavaliers
+  '1610612749': 'bucks', // Milwaukee Bucks
+  '1610612765': 'pistons', // Detroit Pistons
+  '1610612754': 'pacers', // Indiana Pacers
+  '1610612737': 'hawks', // Atlanta Hawks
+  '1610612753': 'magic', // Orlando Magic
+  '1610612766': 'hornets', // Charlotte Hornets
+  '1610612764': 'wizards', // Washington Wizards
+  '1610612759': 'spurs', // San Antonio Spurs
+  '1610612742': 'mavs', // Dallas Mavericks
+  '1610612743': 'nuggets', // Denver Nuggets
+  '1610612756': 'suns', // Phoenix Suns
+  '1610612746': 'clippers', // LA Clippers
+  '1610612763': 'grizzlies', // Memphis Grizzlies
+  '1610612762': 'jazz', // Utah Jazz
+  '1610612758': 'kings', // Sacramento Kings
+  '1610612740': 'pelicans', // New Orleans Pelicans
+  '1610612745': 'rockets', // Houston Rockets
+  '1610612760': 'thunder', // Oklahoma City Thunder
+  '1610612757': 'blazers' // Portland Trail Blazers
+}
+
+const WNBA_ID_TO_KEY: Record<string, string> = {
+  '1611661314': 'aces', // Las Vegas Aces
+  '1611661316': 'liberty', // New York Liberty
+  '1611661315': 'sky', // Chicago Sky
+  '1611661322': 'storm', // Seattle Storm
+  '1611661318': 'sun', // Connecticut Sun
+  '1611661313': 'dream', // Atlanta Dream
+  '1611661317': 'fever', // Indiana Fever
+  '1611661320': 'lynx', // Minnesota Lynx
+  '1611661321': 'mercury', // Phoenix Mercury
+  '1611661319': 'mystics', // Washington Mystics
+  '1611661323': 'wings', // Dallas Wings
+  '1611661324': 'sparks' // Los Angeles Sparks
+}
+
 export interface PlayerData {
   id: string
   name: string
@@ -265,7 +313,27 @@ export const getPlayerById = (id: string): PlayerData | null => {
 }
 
 export const getPlayersByTeam = (teamId: string): PlayerData[] => {
-  return Object.values(ALL_PLAYERS).filter(player => player.team_id === teamId)
+  // First try direct teamId match
+  let playersForTeam = Object.values(ALL_PLAYERS).filter(player => player.team_id === teamId)
+  
+  // If no players found and teamId looks like a numeric API ID, try mapping it
+  if (playersForTeam.length === 0 && /^\d+$/.test(teamId)) {
+    // Try NBA ID mapping
+    const nbaKey = NBA_ID_TO_KEY[teamId]
+    if (nbaKey) {
+      playersForTeam = Object.values(ALL_PLAYERS).filter(player => player.team_id === nbaKey)
+    }
+    
+    // Try WNBA ID mapping if NBA didn't match
+    if (playersForTeam.length === 0) {
+      const wnbaKey = WNBA_ID_TO_KEY[teamId]
+      if (wnbaKey) {
+        playersForTeam = Object.values(ALL_PLAYERS).filter(player => player.team_id === wnbaKey)
+      }
+    }
+  }
+  
+  return playersForTeam
 }
 
 export const getPlayersByLeague = (league: 'NBA' | 'WNBA'): PlayerData[] => {

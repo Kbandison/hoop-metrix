@@ -337,7 +337,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   ${product.price}
                 </span>
                 {product.originalPrice && (
-                  <span className="text-lg text-gray-500 line-through">
+                  <span className="text-lg text-gray-700 line-through">
                     ${product.originalPrice}
                   </span>
                 )}
@@ -532,7 +532,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                             </Badge>
                           )}
                         </div>
-                        <span className="text-sm text-gray-500">{review.date}</span>
+                        <span className="text-sm text-gray-700">{review.date}</span>
                       </div>
                       
                       <div className="flex items-center mb-2">

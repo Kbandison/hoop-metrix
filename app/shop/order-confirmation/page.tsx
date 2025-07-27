@@ -117,7 +117,7 @@ function OrderConfirmationContent() {
     const orderId = searchParams.get('order')
     if (orderId) {
       // Fetch order details from API
-      console.log('Fetching order:', orderId)
+      // TODO: Implement order fetching from database
     }
   }, [searchParams])
 
@@ -146,7 +146,7 @@ function OrderConfirmationContent() {
         })
         setIsShared(true)
       } catch (error) {
-        console.log('Error sharing:', error)
+        // Error in sharing functionality
       }
     } else {
       // Fallback: copy to clipboard

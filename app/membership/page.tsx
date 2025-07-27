@@ -360,7 +360,7 @@ export default function MembershipPage() {
                         </div>
                         {plan.originalPrice && (
                           <div className="flex items-center justify-center gap-2 mt-1">
-                            <span className="text-gray-500 line-through text-sm">
+                            <span className="text-gray-700 line-through text-sm">
                               ${plan.originalPrice}
                             </span>
                             <Badge className="bg-green-500 text-white text-xs">

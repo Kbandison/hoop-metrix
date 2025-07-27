@@ -208,10 +208,35 @@ export class ProductsService {
     page: number = 1,
     limit: number = 20
   ): Promise<{ products: Product[], total: number, totalPages: number }> {
-    // In production, this would make an API call to your backend
-    // For now, using mock data with client-side filtering
-    
-    let filteredProducts = MOCK_PRODUCTS.filter(product => {
+    try {
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString()
+      })
+
+      if (filter?.category) params.append('category', filter.category)
+      if (filter?.search) params.append('search', filter.search)
+      if (sort?.field) params.append('sort', sort.field)
+
+      // Fetch from API
+      const response = await fetch(`/api/products?${params.toString()}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      return {
+        products: data.products,
+        total: data.pagination.total,
+        totalPages: data.pagination.totalPages
+      }
+    } catch (error) {
+      console.error('Error fetching products from API, falling back to mock data:', error)
+      
+      // Fallback to mock data
+      let filteredProducts = MOCK_PRODUCTS.filter(product => {
       if (!product.is_active) return false
       
       if (filter?.category && product.category !== filter.category) return false
@@ -268,10 +293,11 @@ export class ProductsService {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 100))
     
-    return {
-      products: paginatedProducts,
-      total,
-      totalPages
+      return {
+        products: paginatedProducts,
+        total,
+        totalPages
+      }
     }
   }
   

@@ -159,7 +159,7 @@ export default function UserManager({ users, onRefresh }: UserManagerProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <User className="h-6 w-6" />
-            <CardTitle className="text-xl">User Management</CardTitle>
+            <CardTitle className="text-xl text-white">User Management</CardTitle>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">

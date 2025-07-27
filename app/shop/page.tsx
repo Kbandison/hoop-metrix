@@ -135,7 +135,7 @@ export default function ShopPage() {
       id: product.id,
       name: product.name,
       price: product.price,
-      originalPrice: product.original_price,
+      originalPrice: product.original_price || undefined,
       image: product.image_url,
       category: product.category,
       inStock: product.stock_quantity > 0,
@@ -287,7 +287,7 @@ export default function ShopPage() {
                 <Filter className="w-5 h-5 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-800">Find Your Perfect Gear</h3>
-              <div className="ml-auto flex items-center gap-2 text-sm text-gray-500">
+              <div className="ml-auto flex items-center gap-2 text-sm text-gray-700">
                 <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
@@ -330,9 +330,9 @@ export default function ShopPage() {
                   <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-brand-grey-600 rounded-xl font-medium">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white text-gray-900 border border-gray-200 shadow-lg">
                     {categories.map(cat => (
-                      <SelectItem key={cat} value={cat} className="font-medium">{cat}</SelectItem>
+                      <SelectItem key={cat} value={cat} className="font-medium text-gray-900 hover:bg-gray-100">{cat}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -599,7 +599,7 @@ export default function ShopPage() {
                           </div>
                           
                           {/* Product Name */}
-                          <h3 className="font-bold text-xl text-white group-hover:text-brand-grey-300 transition-colors line-clamp-2 leading-tight">
+                          <h3 className="font-bold text-xl text-white group-hover:text-gray-200 transition-colors line-clamp-2 leading-tight">
                             {product.name}
                           </h3>
                           
@@ -665,7 +665,7 @@ export default function ShopPage() {
                             <Button 
                               className="flex-1 bg-gradient-to-r from-brand-black-700 to-brand-grey-600 hover:from-brand-black-800 hover:to-brand-grey-700 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300"
                               onClick={() => addToCart(product)}
-                              disabled={!product.inStock}
+                              disabled={(product.stock_quantity || 0) <= 0}
                             >
                               <ShoppingCart className="w-4 h-4 mr-2" />
                               Add to Cart

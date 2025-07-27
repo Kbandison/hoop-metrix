@@ -485,7 +485,7 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
       </div>
 
       {/* Players Section */}
-      <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-16 bg-gradient-to-br from-gray-50 to-white text-gray-900">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -543,12 +543,12 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
                               {player.position}
                             </Badge>
                             {player.height && (
-                              <span className="text-sm text-gray-500">
+                              <span className="text-sm text-gray-700">
                                 {player.height}
                               </span>
                             )}
                             {player.age && (
-                              <span className="text-sm text-gray-500">
+                              <span className="text-sm text-gray-700">
                                 Age {player.age}
                               </span>
                             )}
@@ -560,15 +560,15 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
                           <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
                             <div className="text-center">
                               <div className="text-lg font-bold text-gray-900">{player.season_stats.pts?.toFixed(1) || '0.0'}</div>
-                              <div className="text-xs text-gray-500">PPG</div>
+                              <div className="text-xs text-gray-700">PPG</div>
                             </div>
                             <div className="text-center">
                               <div className="text-lg font-bold text-gray-900">{player.season_stats.reb?.toFixed(1) || '0.0'}</div>
-                              <div className="text-xs text-gray-500">RPG</div>
+                              <div className="text-xs text-gray-700">RPG</div>
                             </div>
                             <div className="text-center">
                               <div className="text-lg font-bold text-gray-900">{player.season_stats.ast?.toFixed(1) || '0.0'}</div>
-                              <div className="text-xs text-gray-500">APG</div>
+                              <div className="text-xs text-gray-700">APG</div>
                             </div>
                           </div>
                         )}
@@ -586,7 +586,7 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
               transition={{ delay: 1 }}
             >
               <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">No players available for this team.</p>
+              <p className="text-gray-700 text-lg">No players available for this team.</p>
             </motion.div>
           )}
         </div>

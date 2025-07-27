@@ -1,26 +1,127 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useAuth } from '@/lib/auth/auth-context'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   User, 
   CreditCard, 
-  ShoppingBag, 
-  Star, 
-  Settings, 
-  LogOut,
-  Crown,
+  Bell, 
+  Shield, 
+  Heart,
+  ShoppingBag,
+  TrendingUp,
   Calendar,
+  Mail,
+  Phone,
+  MapPin,
+  Edit,
+  Save,
+  X,
+  Eye,
+  EyeOff,
+  Crown,
+  Star,
+  Download,
+  Trash2,
+  LogOut,
   Activity,
-  TrendingUp
+  Settings
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Switch } from '@/components/ui/switch'
+import { Separator } from '@/components/ui/separator'
 import Navigation from '@/components/layout/navigation'
 import Footer from '@/components/layout/footer'
+
+// Types for account data
+interface AccountData {
+  profile: {
+    name: string
+    email: string
+    phone: string
+    address: string
+    joinDate: string
+    avatar: string
+  }
+  subscription: {
+    plan: string
+    status: string
+    nextBilling: string | null
+    price: number
+    interval: string
+  }
+  stats: {
+    ordersPlaced: number
+    totalSpent: number
+    wishlistItems: number
+    memberSince: string
+  }
+  orders: Array<{
+    id: string
+    date: string
+    total: number
+    status: string
+    items: number
+    products?: string
+  }>
+  isAdmin: boolean
+}
+
+// Default/loading data
+const DEFAULT_DATA: AccountData = {
+  profile: {
+    name: 'Loading...',
+    email: 'Loading...',
+    phone: '',
+    address: '',
+    joinDate: '',
+    avatar: '/placeholder-avatar.jpg'
+  },
+  subscription: {
+    plan: 'Free',
+    status: 'inactive',
+    nextBilling: null,
+    price: 0,
+    interval: 'monthly'
+  },
+  stats: {
+    ordersPlaced: 0,
+    totalSpent: 0,
+    wishlistItems: 0,
+    memberSince: ''
+  },
+  orders: [],
+  isAdmin: false
+}
+
+const WISHLIST_ITEMS = [
+  {
+    id: '1',
+    name: 'Lakers #23 LeBron James Jersey',
+    price: 119.99,
+    image: '/placeholder-jersey.jpg',
+    inStock: true
+  },
+  {
+    id: '2',
+    name: 'Warriors Championship Ring Replica',
+    price: 299.99,
+    image: '/placeholder-ring.jpg',
+    inStock: false
+  },
+  {
+    id: '3',
+    name: 'WNBA All-Star Basketball',
+    price: 24.99,
+    image: '/placeholder-basketball.jpg',
+    inStock: true
+  }
+]
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -42,24 +143,81 @@ const cardVariants = {
 }
 
 export default function DashboardPage() {
-  const { user, loading, signOut, isPremium, isAdmin } = useAuth()
-  const router = useRouter()
-  const [stats, setStats] = useState({
-    totalOrders: 0,
-    totalSpent: 0,
-    favoriteTeam: 'Lakers',
-    memberSince: 'January 2024'
+  const [activeTab, setActiveTab] = useState('overview')
+  const [isEditing, setIsEditing] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [accountData, setAccountData] = useState<AccountData>(DEFAULT_DATA)
+  const [formData, setFormData] = useState(DEFAULT_DATA.profile)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [notifications, setNotifications] = useState({
+    email: true,
+    sms: false,
+    push: true,
+    marketing: false
   })
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/auth/login')
+  // Fetch account data
+  const fetchAccountData = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/account')
+      if (!response.ok) {
+        throw new Error('Failed to fetch account data')
+      }
+      const data = await response.json()
+      setAccountData(data)
+      setFormData(data.profile)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load account data')
+      console.error('Error fetching account data:', err)
+    } finally {
+      setLoading(false)
     }
-  }, [user, loading, router])
+  }
+
+  useEffect(() => {
+    fetchAccountData()
+  }, [])
 
   const handleSignOut = async () => {
-    await signOut()
-    router.push('/')
+    // TODO: Implement proper sign out
+    window.location.href = '/auth/login'
+  }
+
+  const handleSave = () => {
+    setIsEditing(false)
+    // TODO: Implement profile save functionality
+  }
+
+  const handleCancel = () => {
+    setIsEditing(false)
+    setFormData(accountData.profile)
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+      case 'delivered':
+        return 'bg-green-100 text-green-800'
+      case 'processing':
+        return 'bg-blue-100 text-blue-800'
+      case 'shipped':
+        return 'bg-purple-100 text-purple-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getPlanColor = (plan: string) => {
+    switch (plan) {
+      case 'HoopMetrix Premium':
+        return 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-yellow-900 border-0 shadow-lg'
+      case 'Free':
+        return 'bg-white/20 text-white border-white/30 backdrop-blur-sm'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
   }
 
   if (loading) {
@@ -76,9 +234,27 @@ export default function DashboardPage() {
     )
   }
 
-  if (!user) {
-    return null // Will redirect via useEffect
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="pt-32 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error loading dashboard</p>
+            <p className="text-gray-600">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 bg-kentucky-blue-600 hover:bg-kentucky-blue-700"
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
   }
+
+  const isPremium = accountData.subscription.status === 'active'
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -96,14 +272,14 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between pt-16">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  Welcome back, {user.email?.split('@')[0] || 'User'}!
+                  Welcome back, {accountData.profile.name !== 'Loading...' ? accountData.profile.name.split(' ')[0] : 'User'}!
                 </h1>
                 <p className="text-gray-600 mt-1">
                   Here's what's happening with your HoopMetrix account
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                {isAdmin && (
+                {accountData.isAdmin && (
                   <Button 
                     variant="outline"
                     onClick={() => {
@@ -158,8 +334,8 @@ export default function DashboardPage() {
                         )}
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold mb-2">{user.email?.split('@')[0] || 'User'}</h2>
-                        <p className="text-white/80 text-sm mb-3">{user.email}</p>
+                        <h2 className="text-2xl font-bold mb-2">{accountData.profile.name}</h2>
+                        <p className="text-white/80 text-sm mb-3">{accountData.profile.email}</p>
                         <div className="flex items-center gap-3">
                           <Badge className={isPremium 
                             ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-yellow-900 border-0 shadow-lg" 
@@ -174,7 +350,7 @@ export default function DashboardPage() {
                               'Free Member'
                             )}
                           </Badge>
-                          {isAdmin && (
+                          {accountData.isAdmin && (
                             <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg">
                               <Crown className="w-3 h-3 mr-1" />
                               Admin
@@ -186,7 +362,7 @@ export default function DashboardPage() {
                     <div className="text-right">
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                         <p className="text-white/80 text-sm mb-1">Member since</p>
-                        <p className="font-bold text-lg">{stats.memberSince}</p>
+                        <p className="font-bold text-lg">{accountData.stats.memberSince}</p>
                       </div>
                     </div>
                   </div>
@@ -203,190 +379,539 @@ export default function DashboardPage() {
             animate="visible"
           >
             <motion.div variants={cardVariants}>
-              <Card className="bg-gradient-to-br from-white to-gray-50 shadow-lg border-0 hover:shadow-xl transition-all duration-300">
+              <Card className="hover:shadow-lg transition-shadow duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-700">Total Orders</CardTitle>
-                  <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
-                    <ShoppingBag className="h-4 w-4 text-white" />
-                  </div>
+                  <CardTitle className="text-sm font-medium text-gray-900">Orders Placed</CardTitle>
+                  <ShoppingBag className="h-4 w-4 text-gray-400" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-gray-900 mb-1">{stats.totalOrders}</div>
-                  <p className="text-xs text-gray-600">
-                    All time purchases
-                  </p>
+                  <div className="text-2xl font-bold text-gray-900">{accountData.stats.ordersPlaced}</div>
+                  <p className="text-xs text-gray-500">Total orders placed</p>
                 </CardContent>
               </Card>
             </motion.div>
 
             <motion.div variants={cardVariants}>
-              <Card className="bg-gradient-to-br from-white to-gray-50 shadow-lg border-0 hover:shadow-xl transition-all duration-300">
+              <Card className="hover:shadow-lg transition-shadow duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-700">Total Spent</CardTitle>
-                  <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
-                    <CreditCard className="h-4 w-4 text-white" />
-                  </div>
+                  <CardTitle className="text-sm font-medium text-gray-900">Total Spent</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-gray-400" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-gray-900 mb-1">${stats.totalSpent}</div>
-                  <p className="text-xs text-gray-600">
-                    Lifetime value
-                  </p>
+                  <div className="text-2xl font-bold text-gray-900">${accountData.stats.totalSpent.toFixed(2)}</div>
+                  <p className="text-xs text-gray-500">Lifetime spending</p>
                 </CardContent>
               </Card>
             </motion.div>
 
             <motion.div variants={cardVariants}>
-              <Card className="bg-gradient-to-br from-white to-gray-50 shadow-lg border-0 hover:shadow-xl transition-all duration-300">
+              <Card className="hover:shadow-lg transition-shadow duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-700">Favorite Team</CardTitle>
-                  <div className="p-2 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg">
-                    <Star className="h-4 w-4 text-white" />
-                  </div>
+                  <CardTitle className="text-sm font-medium text-gray-900">Wishlist Items</CardTitle>
+                  <Heart className="h-4 w-4 text-gray-400" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-gray-900 mb-1">{stats.favoriteTeam}</div>
-                  <p className="text-xs text-gray-600">
-                    Most viewed team
-                  </p>
+                  <div className="text-2xl font-bold text-gray-900">{accountData.stats.wishlistItems}</div>
+                  <p className="text-xs text-gray-500">Items saved</p>
                 </CardContent>
               </Card>
             </motion.div>
 
             <motion.div variants={cardVariants}>
-              <Card className="bg-gradient-to-br from-white to-gray-50 shadow-lg border-0 hover:shadow-xl transition-all duration-300">
+              <Card className="hover:shadow-lg transition-shadow duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-700">Activity</CardTitle>
-                  <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
-                    <Activity className="h-4 w-4 text-white" />
-                  </div>
+                  <CardTitle className="text-sm font-medium text-gray-900">Subscription Status</CardTitle>
+                  <Crown className="h-4 w-4 text-gray-400" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-gray-900 mb-1">42</div>
-                  <p className="text-xs text-gray-600">
-                    Pages viewed this month
-                  </p>
+                  <div className="text-2xl font-bold text-gray-900">{isPremium ? 'Premium' : 'Free'}</div>
+                  <p className="text-xs text-gray-500">{accountData.subscription.plan}</p>
                 </CardContent>
               </Card>
             </motion.div>
           </motion.div>
 
-          {/* Quick Actions */}
+          {/* Main Content Tabs */}
           <motion.div
-            className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
           >
-            <motion.div variants={cardVariants}>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ShoppingBag className="w-5 h-5" />
-                    Recent Orders
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {stats.totalOrders === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p className="mb-4">No orders yet</p>
-                      <Button 
-                        onClick={() => router.push('/shop')}
-                        className="bg-kentucky-blue-600 hover:bg-kentucky-blue-700"
-                      >
-                        Browse Products
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <TabsList className="grid w-full grid-cols-6 bg-white border shadow-sm">
+                <TabsTrigger value="overview" className="flex items-center gap-2 !text-gray-700 data-[state=active]:bg-kentucky-blue-600 data-[state=active]:!text-white">
+                  <Activity className="w-4 h-4" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="profile" className="flex items-center gap-2 !text-gray-700 data-[state=active]:bg-kentucky-blue-600 data-[state=active]:!text-white">
+                  <User className="w-4 h-4" />
+                  Profile
+                </TabsTrigger>
+                <TabsTrigger value="orders" className="flex items-center gap-2 !text-gray-700 data-[state=active]:bg-kentucky-blue-600 data-[state=active]:!text-white">
+                  <ShoppingBag className="w-4 h-4" />
+                  Orders
+                </TabsTrigger>
+                <TabsTrigger value="subscription" className="flex items-center gap-2 !text-gray-700 data-[state=active]:bg-kentucky-blue-600 data-[state=active]:!text-white">
+                  <CreditCard className="w-4 h-4" />
+                  Subscription
+                </TabsTrigger>
+                <TabsTrigger value="wishlist" className="flex items-center gap-2 !text-gray-700 data-[state=active]:bg-kentucky-blue-600 data-[state=active]:!text-white">
+                  <Heart className="w-4 h-4" />
+                  Wishlist
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="flex items-center gap-2 !text-gray-700 data-[state=active]:bg-kentucky-blue-600 data-[state=active]:!text-white">
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Overview Tab */}
+              <TabsContent value="overview" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <motion.div variants={cardVariants}>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-gray-900">
+                          <ShoppingBag className="w-5 h-5" />
+                          Recent Orders
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {accountData.orders.length > 0 ? accountData.orders.slice(0, 3).map((order) => (
+                          <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div>
+                              <p className="font-medium text-gray-900">{order.id}</p>
+                              <p className="text-sm text-gray-600">{order.date}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-gray-900">${order.total.toFixed(2)}</p>
+                              <Badge className={getStatusColor(order.status)}>
+                                {order.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        )) : (
+                          <p className="text-gray-500 text-center py-4">No recent orders</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+
+                  <motion.div variants={cardVariants}>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-gray-900">
+                          <Heart className="w-5 h-5" />
+                          Quick Actions
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <Button 
+                          className="w-full justify-start" 
+                          variant="ghost"
+                          onClick={() => setActiveTab('subscription')}
+                        >
+                          <Crown className="w-4 h-4 mr-2" />
+                          {isPremium ? 'Manage Subscription' : 'Upgrade to Premium'}
+                        </Button>
+                        <Button 
+                          className="w-full justify-start" 
+                          variant="ghost"
+                          onClick={() => setActiveTab('profile')}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Profile
+                        </Button>
+                        <Button 
+                          className="w-full justify-start" 
+                          variant="ghost"
+                          onClick={() => setActiveTab('orders')}
+                        >
+                          <ShoppingBag className="w-4 h-4 mr-2" />
+                          View Order History
+                        </Button>
+                        <Button 
+                          className="w-full justify-start" 
+                          variant="ghost"
+                          onClick={() => window.location.href = '/shop'}
+                        >
+                          <Star className="w-4 h-4 mr-2" />
+                          Shop Products
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </div>
+              </TabsContent>
+
+              {/* Profile Tab */}
+              <TabsContent value="profile" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-gray-900">Personal Information</CardTitle>
+                      {!isEditing ? (
+                        <Button onClick={() => setIsEditing(true)} variant="outline">
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Profile
+                        </Button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button onClick={handleSave} size="sm">
+                            <Save className="w-4 h-4 mr-2" />
+                            Save
+                          </Button>
+                          <Button onClick={handleCancel} variant="outline" size="sm">
+                            <X className="w-4 h-4 mr-2" />
+                            Cancel
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Full Name</Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <Input
+                            id="name"
+                            value={formData.name}
+                            onChange={(e) => setFormData({...formData, name: e.target.value})}
+                            disabled={!isEditing}
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email Address</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                            disabled={!isEditing}
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <Input
+                            id="phone"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                            disabled={!isEditing}
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="address">Address</Label>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <Input
+                            id="address"
+                            value={formData.address}
+                            onChange={(e) => setFormData({...formData, address: e.target.value})}
+                            disabled={!isEditing}
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Orders Tab */}
+              <TabsContent value="orders" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-gray-900">Order History</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {accountData.orders.length > 0 ? accountData.orders.map((order) => (
+                        <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-kentucky-blue-100 rounded-full flex items-center justify-center">
+                              <ShoppingBag className="w-5 h-5 text-kentucky-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{order.id}</p>
+                              <p className="text-sm text-gray-600">{order.date} • {order.items} items</p>
+                              {order.products && (
+                                <p className="text-xs text-gray-500">{order.products}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <p className="font-semibold text-gray-900">${order.total.toFixed(2)}</p>
+                              <Badge className={getStatusColor(order.status)}>
+                                {order.status}
+                              </Badge>
+                            </div>
+                            <Button size="sm" variant="outline">
+                              View Details
+                            </Button>
+                          </div>
+                        </div>
+                      )) : (
+                        <p className="text-gray-500 text-center py-8">No orders yet</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Subscription Tab */}
+              <TabsContent value="subscription" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-gray-900">Current Subscription</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between p-6 bg-kentucky-blue-50 rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-kentucky-blue-100 rounded-full flex items-center justify-center">
+                          {isPremium ? (
+                            <Crown className="w-6 h-6 text-kentucky-blue-600" />
+                          ) : (
+                            <User className="w-6 h-6 text-kentucky-blue-600" />
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {accountData.subscription.plan}
+                          </h3>
+                          <p className="text-gray-600">
+                            ${accountData.subscription.price.toFixed(2)}/{accountData.subscription.interval}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge className={getStatusColor(accountData.subscription.status)}>
+                          {accountData.subscription.status}
+                        </Badge>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {accountData.subscription.nextBilling ? `Next billing: ${accountData.subscription.nextBilling}` : 'No active subscription'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                      {accountData.subscription.status === 'active' ? (
+                        <>
+                          <Button variant="outline" onClick={async () => {
+                            try {
+                              const response = await fetch('/api/manage-subscription', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  customerId: 'cus_example',
+                                  action: 'manage',
+                                }),
+                              })
+                              const { url } = await response.json()
+                              if (url) window.location.href = url
+                            } catch (error) {
+                              console.error('Error:', error)
+                              alert('Something went wrong. Please try again.')
+                            }
+                          }}>
+                            Manage Subscription
+                          </Button>
+                          <Button variant="outline" onClick={async () => {
+                            if (!confirm('Are you sure you want to cancel your subscription?')) return
+                            try {
+                              const response = await fetch('/api/manage-subscription', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  customerId: 'cus_example',
+                                  action: 'cancel',
+                                }),
+                              })
+                              const result = await response.json()
+                              if (result.success) {
+                                alert(result.message)
+                                window.location.reload()
+                              }
+                            } catch (error) {
+                              console.error('Error:', error)
+                              alert('Something went wrong. Please try again.')
+                            }
+                          }}>
+                            Cancel Subscription
+                          </Button>
+                        </>
+                      ) : (
+                        <Button onClick={() => window.location.href = '/membership'}>
+                          <Crown className="w-4 h-4 mr-2" />
+                          Upgrade to Premium
+                        </Button>
+                      )}
+                      <Button variant="outline">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download Invoice
                       </Button>
                     </div>
-                  ) : (
-                    <div>
-                      <p className="text-gray-500">Your order history will appear here.</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Wishlist Tab */}
+              <TabsContent value="wishlist" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-gray-900">My Wishlist ({WISHLIST_ITEMS.length} items)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {WISHLIST_ITEMS.map((item) => (
+                        <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <ShoppingBag className="w-8 h-8 text-gray-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{item.name}</p>
+                              <p className="text-lg font-semibold text-kentucky-blue-600">${item.price}</p>
+                              <Badge className={item.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                                {item.inStock ? 'In Stock' : 'Out of Stock'}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" disabled={!item.inStock}>
+                              Add to Cart
+                            </Button>
+                            <Button size="sm" variant="outline">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-            <motion.div variants={cardVariants}>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5" />
-                    Quick Actions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => router.push('/players')}
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Browse Players
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => router.push('/teams')}
-                  >
-                    <Star className="w-4 h-4 mr-2" />
-                    View Teams
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => router.push('/shop')}
-                  >
-                    <ShoppingBag className="w-4 h-4 mr-2" />
-                    Shop Merchandise
-                  </Button>
-                  {!isPremium && (
-                    <Button 
-                      className="w-full justify-start bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
-                      onClick={() => router.push('/membership')}
-                    >
-                      <Crown className="w-4 h-4 mr-2" />
-                      Upgrade to Premium
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          </motion.div>
-
-          {/* Membership Status */}
-          {!isPremium && (
-            <motion.div
-              variants={cardVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <Card className="border-yellow-200 bg-gradient-to-r from-yellow-50 to-orange-50">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                        <Crown className="w-6 h-6 text-yellow-600" />
+              {/* Settings Tab */}
+              <TabsContent value="settings" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-gray-900">Notification Preferences</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-gray-900">Email Notifications</p>
+                          <p className="text-sm text-gray-600">Receive updates via email</p>
+                        </div>
+                        <Switch
+                          checked={notifications.email}
+                          onCheckedChange={(checked: boolean) => setNotifications({...notifications, email: checked})}
+                        />
                       </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-gray-900">SMS Notifications</p>
+                          <p className="text-sm text-gray-600">Receive updates via text message</p>
+                        </div>
+                        <Switch
+                          checked={notifications.sms}
+                          onCheckedChange={(checked: boolean) => setNotifications({...notifications, sms: checked})}
+                        />
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-gray-900">Push Notifications</p>
+                          <p className="text-sm text-gray-600">Receive browser notifications</p>
+                        </div>
+                        <Switch
+                          checked={notifications.push}
+                          onCheckedChange={(checked: boolean) => setNotifications({...notifications, push: checked})}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-gray-900">Security Settings</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="current-password">Current Password</Label>
+                        <div className="relative">
+                          <Input
+                            id="current-password"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Enter current password"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="new-password">New Password</Label>
+                        <Input
+                          id="new-password"
+                          type="password"
+                          placeholder="Enter new password"
+                        />
+                      </div>
+
+                      <Button>Update Password</Button>
+
+                      <Separator />
+
                       <div>
-                        <h3 className="font-semibold text-gray-900">Upgrade to Premium</h3>
-                        <p className="text-gray-600 text-sm">Get access to exclusive content, advanced stats, and premium features for just $10!</p>
+                        <h3 className="text-lg font-semibold mb-2 text-gray-900">Two-Factor Authentication</h3>
+                        <p className="text-gray-600 mb-4 text-sm">
+                          Add an extra layer of security to your account
+                        </p>
+                        <Button variant="outline">Enable 2FA</Button>
                       </div>
-                    </div>
-                    <Button 
-                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
-                      onClick={() => router.push('/membership')}
-                    >
-                      Upgrade Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </motion.div>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   )
