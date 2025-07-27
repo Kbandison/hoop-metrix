@@ -12,8 +12,6 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import Navigation from '@/components/layout/navigation'
-import Footer from '@/components/layout/footer'
 
 interface Team {
   id: string
@@ -70,7 +68,7 @@ const cardVariants = {
     y: 0,
     scale: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 15
     }
@@ -79,7 +77,7 @@ const cardVariants = {
     y: -8,
     scale: 1.02,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 400,
       damping: 10
     }
@@ -389,8 +387,6 @@ function TeamsPageContent() {
 
   return (
     <div className="min-h-screen">
-      {/* Navigation */}
-      <Navigation />
       
       {/* Header Section */}
       <motion.section 
@@ -406,10 +402,10 @@ function TeamsPageContent() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
           >
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-kentucky-blue-600 to-kentucky-blue-800 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold mb-8 bg-gradient-to-r from-kentucky-blue-600 to-kentucky-blue-800 bg-clip-text text-transparent leading-tight">
               Team Directory
             </h1>
-            <p className="text-lg md:text-xl text-gray-600 mb-6 mt-2">
+            <p className="text-lg md:text-xl text-gray-600 mb-6">
               {league === 'Custom' 
                 ? 'Discover custom teams created by our community' 
                 : 'Explore NBA and WNBA teams, their history, and current rosters'
@@ -476,7 +472,7 @@ function TeamsPageContent() {
                     placeholder="Search by team name, city, or abbreviation..."
                     value={search}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-12 h-12 border-2 border-gray-200 focus:border-kentucky-blue-500 rounded-xl font-medium"
+                    className="pl-12 h-12 border-2 border-gray-200 focus:border-kentucky-blue-500 rounded-xl font-medium bg-white"
                   />
                 </div>
               </motion.div>
@@ -490,10 +486,10 @@ function TeamsPageContent() {
               >
                 <label className="block text-sm font-semibold text-gray-700 mb-2">League</label>
                 <Select value={league || 'all'} onValueChange={handleLeagueChange}>
-                  <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-kentucky-blue-500 rounded-xl font-medium">
+                  <SelectTrigger className="h-12 min-h-[48px] border-2 border-gray-200 focus:border-kentucky-blue-500 rounded-xl font-medium !bg-white text-gray-900 px-4 py-3">
                     <SelectValue placeholder="All Leagues" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white text-gray-900 border border-gray-200 shadow-lg">
+                  <SelectContent>
                     <SelectItem value="all" className="font-medium text-gray-900 hover:bg-gray-100">
                       <div className="flex items-center gap-2">
                         <span>🏆</span>
@@ -735,8 +731,6 @@ function TeamsPageContent() {
           )}
         </div>
       </section>
-      
-      <Footer />
     </div>
   )
 }

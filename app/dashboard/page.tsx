@@ -7,7 +7,6 @@ import {
   CreditCard, 
   Bell, 
   Shield, 
-  Heart,
   ShoppingBag,
   TrendingUp,
   Calendar,
@@ -35,8 +34,6 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
-import Navigation from '@/components/layout/navigation'
-import Footer from '@/components/layout/footer'
 
 // Types for account data
 interface AccountData {
@@ -58,7 +55,6 @@ interface AccountData {
   stats: {
     ordersPlaced: number
     totalSpent: number
-    wishlistItems: number
     memberSince: string
   }
   orders: Array<{
@@ -92,36 +88,12 @@ const DEFAULT_DATA: AccountData = {
   stats: {
     ordersPlaced: 0,
     totalSpent: 0,
-    wishlistItems: 0,
     memberSince: ''
   },
   orders: [],
   isAdmin: false
 }
 
-const WISHLIST_ITEMS = [
-  {
-    id: '1',
-    name: 'Lakers #23 LeBron James Jersey',
-    price: 119.99,
-    image: '/placeholder-jersey.jpg',
-    inStock: true
-  },
-  {
-    id: '2',
-    name: 'Warriors Championship Ring Replica',
-    price: 299.99,
-    image: '/placeholder-ring.jpg',
-    inStock: false
-  },
-  {
-    id: '3',
-    name: 'WNBA All-Star Basketball',
-    price: 24.99,
-    image: '/placeholder-basketball.jpg',
-    inStock: true
-  }
-]
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -223,8 +195,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="pt-32 flex items-center justify-center">
+                <div className="pt-32 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-kentucky-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading dashboard...</p>
@@ -237,8 +208,7 @@ export default function DashboardPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="pt-32 flex items-center justify-center">
+                <div className="pt-32 flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-600 mb-4">Error loading dashboard</p>
             <p className="text-gray-600">{error}</p>
@@ -258,8 +228,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
+            
       <div className="pt-24 pb-8">
         <div className="container mx-auto px-4">
           {/* Header */}
@@ -373,7 +342,7 @@ export default function DashboardPage() {
 
           {/* Stats Grid */}
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 lg:max-w-5xl lg:mx-auto"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -404,18 +373,6 @@ export default function DashboardPage() {
               </Card>
             </motion.div>
 
-            <motion.div variants={cardVariants}>
-              <Card className="hover:shadow-lg transition-shadow duration-300">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-900">Wishlist Items</CardTitle>
-                  <Heart className="h-4 w-4 text-gray-400" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-gray-900">{accountData.stats.wishlistItems}</div>
-                  <p className="text-xs text-gray-500">Items saved</p>
-                </CardContent>
-              </Card>
-            </motion.div>
 
             <motion.div variants={cardVariants}>
               <Card className="hover:shadow-lg transition-shadow duration-300">
@@ -438,7 +395,7 @@ export default function DashboardPage() {
             animate="visible"
           >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-6 bg-white border shadow-sm">
+              <TabsList className="grid w-full grid-cols-5 bg-white border shadow-sm">
                 <TabsTrigger value="overview" className="flex items-center gap-2 !text-gray-700 data-[state=active]:bg-kentucky-blue-600 data-[state=active]:!text-white">
                   <Activity className="w-4 h-4" />
                   Overview
@@ -454,10 +411,6 @@ export default function DashboardPage() {
                 <TabsTrigger value="subscription" className="flex items-center gap-2 !text-gray-700 data-[state=active]:bg-kentucky-blue-600 data-[state=active]:!text-white">
                   <CreditCard className="w-4 h-4" />
                   Subscription
-                </TabsTrigger>
-                <TabsTrigger value="wishlist" className="flex items-center gap-2 !text-gray-700 data-[state=active]:bg-kentucky-blue-600 data-[state=active]:!text-white">
-                  <Heart className="w-4 h-4" />
-                  Wishlist
                 </TabsTrigger>
                 <TabsTrigger value="settings" className="flex items-center gap-2 !text-gray-700 data-[state=active]:bg-kentucky-blue-600 data-[state=active]:!text-white">
                   <Settings className="w-4 h-4" />
@@ -501,7 +454,7 @@ export default function DashboardPage() {
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-gray-900">
-                          <Heart className="w-5 h-5" />
+                          <Star className="w-5 h-5" />
                           Quick Actions
                         </CardTitle>
                       </CardHeader>
@@ -770,42 +723,6 @@ export default function DashboardPage() {
                 </Card>
               </TabsContent>
 
-              {/* Wishlist Tab */}
-              <TabsContent value="wishlist" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-gray-900">My Wishlist ({WISHLIST_ITEMS.length} items)</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {WISHLIST_ITEMS.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <ShoppingBag className="w-8 h-8 text-gray-400" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">{item.name}</p>
-                              <p className="text-lg font-semibold text-kentucky-blue-600">${item.price}</p>
-                              <Badge className={item.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                                {item.inStock ? 'In Stock' : 'Out of Stock'}
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" disabled={!item.inStock}>
-                              Add to Cart
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
 
               {/* Settings Tab */}
               <TabsContent value="settings" className="space-y-6">
@@ -912,7 +829,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <Footer />
     </div>
   )
 }

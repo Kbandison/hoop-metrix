@@ -7,8 +7,6 @@ import Link from 'next/link'
 import { CheckCircle, ArrowRight, Crown, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import Navigation from '@/components/layout/navigation'
-import Footer from '@/components/layout/footer'
 
 function SuccessContent() {
   const searchParams = useSearchParams()
@@ -35,7 +33,6 @@ function SuccessContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <Navigation />
       
       <div className="pt-32 pb-20">
         <div className="container mx-auto px-4">
@@ -162,7 +159,6 @@ function SuccessContent() {
         </div>
       </div>
       
-      <Footer />
     </div>
   )
 }

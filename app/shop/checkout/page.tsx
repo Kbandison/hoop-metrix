@@ -13,7 +13,6 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import Navigation from '@/components/layout/navigation'
 import { useCart, createCartItemKey } from '@/lib/contexts/cart-context'
 
 interface FormData {
@@ -165,7 +164,6 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen">
-        <Navigation />
         <div className="container mx-auto px-4 py-8 pt-32 text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
           <p className="text-gray-600 mb-6">Add some items to your cart before checking out.</p>
@@ -186,7 +184,6 @@ export default function CheckoutPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Navigation />
       
       <div className="container mx-auto px-4 py-8 pt-32">
         {/* Header */}
@@ -515,12 +512,26 @@ export default function CheckoutPage() {
                       return (
                         <div key={itemKey} className="flex items-center gap-3 p-2 border rounded">
                           <div className="relative w-12 h-12 bg-gray-200 rounded overflow-hidden">
-                            <Image
-                              src="/placeholder-product.jpg"
-                              alt={item.name}
-                              fill
-                              className="object-cover"
-                            />
+                            {item.image ? (
+                              <Image
+                                src={item.image}
+                                alt={item.name}
+                                fill
+                                className="object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement
+                                  target.style.display = 'none'
+                                  const parent = target.parentElement
+                                  if (parent) {
+                                    parent.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500 text-xs font-medium">No Image</div>'
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="flex items-center justify-center h-full text-gray-500 text-xs font-medium">
+                                No Image
+                              </div>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-sm line-clamp-1">{item.name}</h4>

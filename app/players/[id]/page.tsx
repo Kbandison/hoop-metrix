@@ -14,7 +14,6 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { PlayerImage } from '@/components/ui/player-image'
-import Navigation from '@/components/layout/navigation'
 
 // Team colors mapping function
 const getTeamColors = (teamName: string, league: string) => {
@@ -203,7 +202,6 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
-        <Navigation />
         <div className="container mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
@@ -223,7 +221,6 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
   if (!data) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
-        <Navigation />
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Player Not Found</h1>
@@ -272,7 +269,6 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       transition={{ duration: 0.5 }}
     >
       {/* Navigation */}
-      <Navigation />
       
       {/* Hero Section */}
       <div 

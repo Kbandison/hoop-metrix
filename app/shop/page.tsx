@@ -4,15 +4,13 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Search, Filter, ShoppingCart, Star, Heart, Grid, List } from 'lucide-react'
+import { Search, Filter, ShoppingCart, Star, Grid, List } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import Navigation from '@/components/layout/navigation'
-import Footer from '@/components/layout/footer'
 import { useCart } from '@/lib/contexts/cart-context'
 import { Product, ProductFilter, ProductSort, PRODUCT_CATEGORIES } from '@/lib/types/product'
 import { ProductsService } from '@/lib/services/products'
@@ -63,7 +61,6 @@ export default function ShopPage() {
   const [league, setLeague] = useState<string>('')
   const [sortBy, setSortBy] = useState<string>('featured')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [wishlist, setWishlist] = useState<string[]>([])
   const [totalProducts, setTotalProducts] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -120,13 +117,6 @@ export default function ShopPage() {
 
   const filteredProducts = products
 
-  const toggleWishlist = (productId: string) => {
-    setWishlist(prev => 
-      prev.includes(productId) 
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    )
-  }
 
   const { addItem, openCart } = useCart()
 
@@ -146,8 +136,6 @@ export default function ShopPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Navigation */}
-      <Navigation />
       
       {/* Header Section - Modern E-commerce Style */}
       <motion.section 
@@ -176,16 +164,6 @@ export default function ShopPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
           >
-            <motion.div
-              className="inline-block mb-6"
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.5, duration: 0.8, type: "spring" as const, stiffness: 100 }}
-            >
-              <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 border border-white/30">
-                <span className="text-sm font-semibold tracking-wider">🏀 OFFICIAL MERCHANDISE</span>
-              </div>
-            </motion.div>
             
             <motion.h1 
               className="text-5xl md:text-7xl font-black mb-6 leading-tight"
@@ -201,41 +179,45 @@ export default function ShopPage() {
               </span>
             </motion.h1>
             
-            <motion.p 
-              className="text-xl md:text-2xl text-white/90 mb-8 font-medium"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.6 }}
-            >
-              Authentic NBA & WNBA merchandise • Exclusive drops • Champion gear
-            </motion.p>
-            
-            {/* Animated Feature Pills */}
             <motion.div 
               className="flex flex-wrap justify-center gap-4 mb-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1, duration: 0.6 }}
+              transition={{ delay: 0.8, duration: 0.6 }}
             >
-              {[
-                { icon: "🚚", text: "Free Shipping $75+", delay: 0 },
-                { icon: "⚡", text: "Express Delivery", delay: 0.1 },
-                { icon: "🔥", text: "Exclusive Items", delay: 0.2 },
-                { icon: "💎", text: "100% Authentic", delay: 0.3 }
-              ].map((feature, index) => (
-                <motion.div
-                  key={index}
-                  className="bg-white/15 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20 hover:bg-white/25 transition-all duration-300"
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 1 + feature.delay, duration: 0.5, type: "spring" as const }}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                >
-                  <span className="text-white font-semibold text-sm">
-                    {feature.icon} {feature.text}
-                  </span>
-                </motion.div>
-              ))}
+              <motion.div
+                className="bg-white/15 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20 hover:bg-white/25 transition-all duration-300"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 1, duration: 0.5, type: "spring" as const }}
+                whileHover={{ scale: 1.05, y: -2 }}
+              >
+                <span className="text-white font-semibold text-sm">
+                  🏀 Official Merchandise
+                </span>
+              </motion.div>
+              <motion.div
+                className="bg-white/15 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20 hover:bg-white/25 transition-all duration-300"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 1.1, duration: 0.5, type: "spring" as const }}
+                whileHover={{ scale: 1.05, y: -2 }}
+              >
+                <span className="text-white font-semibold text-sm">
+                  ✅ Fast Shipping
+                </span>
+              </motion.div>
+              <motion.div
+                className="bg-white/15 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20 hover:bg-white/25 transition-all duration-300"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 1.2, duration: 0.5, type: "spring" as const }}
+                whileHover={{ scale: 1.05, y: -2 }}
+              >
+                <span className="text-white font-semibold text-sm">
+                  🔒 Secure Checkout
+                </span>
+              </motion.div>
             </motion.div>
 
           </motion.div>
@@ -298,10 +280,10 @@ export default function ShopPage() {
               </div>
             </motion.div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+            <div className="flex flex-col lg:flex-row gap-4 items-end">
               {/* Search */}
               <motion.div 
-                className="lg:col-span-4"
+                className="flex-1"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.9, duration: 0.5 }}
@@ -313,116 +295,81 @@ export default function ShopPage() {
                     placeholder="Search jerseys, shoes, accessories..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-12 h-12 border-2 border-gray-200 focus:border-brand-grey-600 rounded-xl font-medium"
+                    className="pl-12 h-12 border-2 border-gray-200 focus:border-brand-grey-600 rounded-xl font-medium bg-white"
                   />
                 </div>
               </motion.div>
 
-              {/* Category Filter */}
-              <motion.div 
-                className="lg:col-span-2"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1, duration: 0.5 }}
-              >
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
-                <Select value={category || 'All'} onValueChange={(value) => setCategory(value === 'All' ? '' : value)}>
-                  <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-brand-grey-600 rounded-xl font-medium">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white text-gray-900 border border-gray-200 shadow-lg">
-                    {categories.map(cat => (
-                      <SelectItem key={cat} value={cat} className="font-medium text-gray-900 hover:bg-gray-100">{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </motion.div>
+              {/* Category and League Filters - Side by Side */}
+              <div className="flex gap-2 lg:min-w-0">
+                {/* Category Filter */}
+                <motion.div 
+                  className="w-full lg:w-40"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1, duration: 0.5 }}
+                >
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+                  <Select value={category || 'All'} onValueChange={(value) => setCategory(value === 'All' ? '' : value)}>
+                    <SelectTrigger className="h-12 min-h-[48px] border-2 border-gray-200 focus:border-brand-grey-600 rounded-xl font-medium !bg-white text-gray-900 px-4 py-3">
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(cat => (
+                        <SelectItem key={cat} value={cat} className="font-medium text-gray-900 hover:bg-gray-100">{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </motion.div>
 
-              {/* League Filter */}
-              <motion.div 
-                className="lg:col-span-2"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.1, duration: 0.5 }}
-              >
-                <label className="block text-sm font-semibold text-gray-700 mb-2">League</label>
-                <Select value={league || 'All'} onValueChange={(value) => setLeague(value === 'All' ? '' : value)}>
-                  <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-brand-grey-600 rounded-xl font-medium">
-                    <SelectValue placeholder="All Leagues" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {leagues.map(l => (
-                      <SelectItem key={l} value={l} className="font-medium">
-                        <div className="flex items-center gap-2">
-                          {l === 'NBA' && <span className="text-blue-600">🏀</span>}
-                          {l === 'WNBA' && <span className="text-orange-600">🏀</span>}
-                          {l === 'All' && <span>🏆</span>}
-                          {l}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </motion.div>
+                {/* League Filter */}
+                <motion.div 
+                  className="w-full lg:w-44"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.1, duration: 0.5 }}
+                >
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">League</label>
+                  <Select value={league || 'All'} onValueChange={(value) => setLeague(value === 'All' ? '' : value)}>
+                    <SelectTrigger className="h-12 min-h-[48px] border-2 border-gray-200 focus:border-brand-grey-600 rounded-xl font-medium !bg-white text-gray-900 px-4 py-3">
+                      <SelectValue placeholder="All Leagues" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {leagues.map(l => (
+                        <SelectItem key={l} value={l} className="font-medium text-gray-900 hover:bg-gray-100">
+                          <div className="flex items-center gap-2">
+                            {l === 'NBA' && <span className="text-blue-600">🏀</span>}
+                            {l === 'WNBA' && <span className="text-orange-600">🏀</span>}
+                            {l === 'All' && <span>🏆</span>}
+                            {l}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </motion.div>
+              </div>
 
-              {/* Sort */}
+              {/* Sort By Filter */}
               <motion.div 
-                className="lg:col-span-2"
+                className="w-full lg:w-44"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2, duration: 0.5 }}
               >
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Sort By</label>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-brand-grey-600 rounded-xl font-medium">
+                  <SelectTrigger className="h-12 min-h-[48px] border-2 border-gray-200 focus:border-brand-grey-600 rounded-xl font-medium !bg-white text-gray-900 px-4 py-3">
                     <SelectValue placeholder="Sort Products" />
                   </SelectTrigger>
                   <SelectContent>
                     {sortOptions.map(option => (
-                      <SelectItem key={option.value} value={option.value} className="font-medium">
+                      <SelectItem key={option.value} value={option.value} className="font-medium text-gray-900 hover:bg-gray-100">
                         {option.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </motion.div>
-
-              {/* View Toggle */}
-              <motion.div 
-                className="lg:col-span-2"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.3, duration: 0.5 }}
-              >
-                <label className="block text-sm font-semibold text-gray-700 mb-2">View</label>
-                <div className="bg-gray-100 p-1 rounded-xl flex">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className={`flex-1 rounded-lg font-semibold transition-all duration-300 ${
-                      viewMode === 'grid' 
-                        ? 'bg-gradient-to-r from-brand-black-700 to-brand-grey-600 text-white shadow-lg' 
-                        : 'text-gray-600 hover:text-gray-800'
-                    }`}
-                  >
-                    <Grid className="w-4 h-4 mr-1" />
-                    Grid
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className={`flex-1 rounded-lg font-semibold transition-all duration-300 ${
-                      viewMode === 'list' 
-                        ? 'bg-gradient-to-r from-brand-black-700 to-brand-grey-600 text-white shadow-lg' 
-                        : 'text-gray-600 hover:text-gray-800'
-                    }`}
-                  >
-                    <List className="w-4 h-4 mr-1" />
-                    List
-                  </Button>
-                </div>
               </motion.div>
             </div>
           </motion.div>
@@ -430,10 +377,10 @@ export default function ShopPage() {
       </motion.section>
 
       {/* Products Grid */}
-      <section id="products" className="py-16 bg-gradient-to-br from-gray-900 via-gray-800 to-black relative overflow-hidden">
+      <section id="products" className="py-16 bg-white relative overflow-hidden">
         {/* Background Grid Pattern */}
         <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M20%2020h20v20H20zM0%200h20v20H0z%22/%3E%3C/g%3E%3C/svg%3E')]"></div>
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22%23000000%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M20%2020h20v20H20zM0%200h20v20H0z%22/%3E%3C/g%3E%3C/svg%3E')]"></div>
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
@@ -445,18 +392,18 @@ export default function ShopPage() {
             transition={{ delay: 0.3, duration: 0.8 }}
           >
             <motion.h2 
-              className="text-4xl md:text-5xl font-black text-white mb-4"
+              className="text-4xl md:text-5xl font-black text-gray-900 mb-4"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.6 }}
             >
-              <span className="bg-gradient-to-r from-brand-grey-400 to-brand-grey-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-brand-black-700 to-brand-grey-600 bg-clip-text text-transparent">
                 HOTTEST
               </span>{" "}
-              <span className="text-white">DROPS</span>
+              <span className="text-gray-900">DROPS</span>
             </motion.h2>
             <motion.p 
-              className="text-xl text-gray-300 max-w-2xl mx-auto"
+              className="text-xl text-gray-700 max-w-2xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7, duration: 0.6 }}
@@ -468,26 +415,26 @@ export default function ShopPage() {
           <AnimatePresence mode="wait">
             {loading ? (
               <motion.div 
-                className={`grid ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'} gap-8`}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
                 key="loading"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/20">
-                    <Skeleton className="w-full h-80 bg-white/20" />
+                  <div key={i} className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-md">
+                    <Skeleton className="w-full h-80 bg-gray-200" />
                     <div className="p-6 space-y-3">
-                      <Skeleton className="h-6 w-3/4 bg-white/20" />
-                      <Skeleton className="h-4 w-1/2 bg-white/20" />
-                      <Skeleton className="h-8 w-full bg-white/20" />
+                      <Skeleton className="h-6 w-3/4 bg-gray-200" />
+                      <Skeleton className="h-4 w-1/2 bg-gray-200" />
+                      <Skeleton className="h-8 w-full bg-gray-200" />
                     </div>
                   </div>
                 ))}
               </motion.div>
             ) : (
               <motion.div
-                className={`grid ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'} gap-8`}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
                 key="products"
                 variants={containerVariants}
                 initial="hidden"
@@ -500,36 +447,33 @@ export default function ShopPage() {
                     whileHover="hover"
                     className="group"
                   >
-                    <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/20 transition-all duration-500 hover:border-brand-grey-500/50 hover:shadow-2xl hover:shadow-brand-grey-500/20 cursor-pointer">
+                    <div className="relative bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-md transition-all duration-500 hover:border-gray-300 hover:shadow-xl cursor-pointer">
                       {/* Product Image */}
-                      <div className="relative h-80 bg-gradient-to-br from-brand-black-700/20 to-brand-grey-700/20 overflow-hidden">
-                        <Image
-                          src={product.image_url}
-                          alt={product.name}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-700"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/placeholder-product.jpg'
-                          }}
-                        />
+                      <div className="relative h-80 bg-gray-100 overflow-hidden">
+                        {product.image_url ? (
+                          <Image
+                            src={product.image_url}
+                            alt={product.name}
+                            fill
+                            className="object-cover group-hover:scale-110 transition-transform duration-700"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.style.display = 'none'
+                              const parent = target.parentElement
+                              if (parent) {
+                                parent.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500 font-medium">Image not available</div>'
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-gray-500 font-medium">
+                            Image not available
+                          </div>
+                        )}
                         
                         {/* Gradient Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                         
-                        {/* Wishlist Button */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm hover:bg-white/30 border border-white/30 text-white"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            toggleWishlist(product.id)
-                          }}
-                        >
-                          <Heart 
-                            className={`w-4 h-4 ${wishlist.includes(product.id) ? 'fill-red-500 text-red-500' : 'text-white'}`} 
-                          />
-                        </Button>
 
                         {/* Sale Badge */}
                         {product.original_price && (
@@ -559,22 +503,6 @@ export default function ShopPage() {
                           </motion.div>
                         )}
 
-                        {/* Quick Add to Cart (appears on hover) */}
-                        <motion.div
-                          className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Button
-                            size="sm"
-                            className="bg-gradient-to-r from-brand-black-700 to-brand-grey-600 hover:from-brand-black-800 hover:to-brand-grey-700 text-white font-bold shadow-lg"
-                            onClick={() => addToCart(product)}
-                            disabled={product.stock_quantity <= 0}
-                          >
-                            <ShoppingCart className="w-4 h-4 mr-1" />
-                            Add
-                          </Button>
-                        </motion.div>
                       </div>
 
                       {/* Product Info */}
@@ -582,7 +510,7 @@ export default function ShopPage() {
                         <div className="space-y-4">
                           {/* Category and League Badges */}
                           <div className="flex items-center justify-between">
-                            <Badge className="bg-white/20 text-white border-white/30 text-xs font-medium">
+                            <Badge className="bg-gray-100 text-gray-700 border-gray-200 text-xs font-medium">
                               {product.category}
                             </Badge>
                             {product.league && (
@@ -599,7 +527,7 @@ export default function ShopPage() {
                           </div>
                           
                           {/* Product Name */}
-                          <h3 className="font-bold text-xl text-white group-hover:text-gray-200 transition-colors line-clamp-2 leading-tight">
+                          <h3 className="font-bold text-xl text-gray-900 group-hover:text-gray-700 transition-colors line-clamp-2 leading-tight">
                             {product.name}
                           </h3>
                           
@@ -609,23 +537,23 @@ export default function ShopPage() {
                               {Array.from({ length: 5 }).map((_, i) => (
                                 <Star 
                                   key={i} 
-                                  className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-500'}`} 
+                                  className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
                                 />
                               ))}
                             </div>
-                            <span className="text-sm text-gray-300 font-medium">
+                            <span className="text-sm text-gray-600 font-medium">
                               {product.rating} ({product.review_count} reviews)
                             </span>
                           </div>
 
                           {/* Price */}
                           <div className="flex items-center gap-3">
-                            <span className="text-2xl font-black text-white">
+                            <span className="text-2xl font-black text-gray-900">
                               ${product.price}
                             </span>
                             {product.original_price && (
                               <>
-                                <span className="text-sm text-gray-400 line-through">
+                                <span className="text-sm text-gray-500 line-through">
                                   ${product.original_price}
                                 </span>
                                 <Badge className="bg-red-500 text-white text-xs font-bold">
@@ -639,15 +567,15 @@ export default function ShopPage() {
                           <div className="flex items-center gap-2">
                             {product.stock_quantity > 0 ? (
                               <>
-                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                                <span className="text-green-400 font-semibold text-sm">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span className="text-green-600 font-semibold text-sm">
                                   In Stock ({product.stock_quantity} available)
                                 </span>
                               </>
                             ) : (
                               <>
-                                <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                                <span className="text-red-400 font-semibold text-sm">Out of Stock</span>
+                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                <span className="text-red-500 font-semibold text-sm">Out of Stock</span>
                               </>
                             )}
                           </div>
@@ -657,7 +585,7 @@ export default function ShopPage() {
                             <Link href={`/shop/products/${product.id}`} className="flex-1">
                               <Button 
                                 variant="outline" 
-                                className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 font-semibold transition-all duration-300"
+                                className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 font-semibold transition-all duration-300"
                               >
                                 Details
                               </Button>
@@ -696,10 +624,10 @@ export default function ShopPage() {
                 }}
                 transition={{ duration: 3, repeat: Infinity }}
               >
-                <ShoppingCart className="w-20 h-20 mx-auto mb-4" />
+                <ShoppingCart className="w-20 h-20 mx-auto mb-4 text-gray-400" />
               </motion.div>
-              <h3 className="text-2xl font-bold text-white mb-4">No products found</h3>
-              <p className="text-gray-300 mb-8 max-w-md mx-auto">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">No products found</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
                 Looks like we don't have any items matching your criteria. Let's try something different!
               </p>
               <Button 
@@ -717,8 +645,6 @@ export default function ShopPage() {
           )}
         </div>
       </section>
-      
-      <Footer />
     </div>
   )
 }

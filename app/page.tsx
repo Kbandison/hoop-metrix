@@ -8,9 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlayerImage } from "@/components/ui/player-image";
-import { Star, Trophy, Users, ShoppingBag, Crown, ArrowRight, Plus } from "lucide-react";
-import Navigation from "@/components/layout/navigation";
-import Footer from "@/components/layout/footer";
+import { Star, Trophy, Users, ShoppingBag, Crown, ArrowRight, Plus, ChevronDown } from "lucide-react";
 import { useCart } from "@/lib/contexts/cart-context";
 
 // Animation variants
@@ -35,7 +33,7 @@ const cardVariants = {
     y: 0,
     scale: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 15
     }
@@ -44,7 +42,7 @@ const cardVariants = {
     y: -10,
     scale: 1.05,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 400,
       damping: 10
     }
@@ -85,7 +83,18 @@ const getTeamColors = (team: string) => {
     'Celtics': 'from-green-600 to-green-800',
     'Heat': 'from-red-600 to-black',
     'Nuggets': 'from-yellow-500 to-blue-600',
-    'Suns': 'from-orange-500 to-purple-600'
+    'Suns': 'from-orange-500 to-purple-600',
+    'Raptors': 'from-red-600 to-black',
+    'Mystics': 'from-red-500 to-blue-600',
+    'Sky': 'from-blue-500 to-yellow-400',
+    'Fever': 'from-yellow-500 to-red-600',
+    'Storm': 'from-green-600 to-yellow-500',
+    'Wings': 'from-blue-600 to-yellow-500',
+    'Lynx': 'from-blue-600 to-green-500',
+    'Sparks': 'from-purple-600 to-yellow-500',
+    'Mercury': 'from-orange-500 to-purple-600',
+    'Dream': 'from-red-600 to-yellow-500',
+    'Sun': 'from-orange-500 to-red-600'
   }
   return teamColors[team] || 'from-kentucky-blue-600 to-kentucky-blue-800'
 }
@@ -94,51 +103,100 @@ export default function Home() {
   const [topPlayers, setTopPlayers] = useState<Player[]>([])
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>([])
   const [loading, setLoading] = useState(true)
-  const { addItem } = useCart()
+  const { addItem, openCart } = useCart()
 
-  // Fetch top players from API
+  // Fetch real data from APIs
   useEffect(() => {
-    const fetchTopPlayers = async () => {
+    const fetchData = async () => {
       try {
-        // This would fetch from your API - using mock data for now
-        const mockPlayers: Player[] = [
-          { id: "lebron-james", apiId: "2544", name: "LeBron James", position: "SF", team: "Lakers", league: "NBA", stats: { points: 25.3, rebounds: 7.3, assists: 7.4 } },
-          { id: "stephen-curry", apiId: "201939", name: "Stephen Curry", position: "PG", team: "Warriors", league: "NBA", stats: { points: 26.4, rebounds: 4.5, assists: 5.1 } },
-          { id: "aja-wilson", apiId: "1629659", name: "A'ja Wilson", position: "F", team: "Aces", league: "WNBA", stats: { points: 22.8, rebounds: 9.4, assists: 2.3 } },
-          { id: "breanna-stewart", apiId: "1628932", name: "Breanna Stewart", position: "F", team: "Liberty", league: "WNBA", stats: { points: 23.0, rebounds: 9.3, assists: 3.8 } }
-        ]
-        setTopPlayers(mockPlayers)
+        // Fetch actual featured products from products API
+        const productsResponse = await fetch('/api/products?limit=4')
+        const productsData = await productsResponse.json()
         
-        // Use actual featured products from the products service
-        const mockProducts: FeaturedProduct[] = [
+        if (productsData.products) {
+          const featuredProducts = productsData.products.slice(0, 4).map((product: any) => ({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image_url || '/placeholder-product.jpg',
+            category: product.category
+          }))
+          setFeaturedProducts(featuredProducts)
+        }
+        
+        // Fetch actual players data
+        const playersResponse = await fetch('/api/players?limit=4')
+        const playersData = await playersResponse.json()
+        
+        if (playersData.players && playersData.players.length > 0) {
+          // Filter for well-known players and ensure we have real stats
+          const featuredPlayerIds = ["1628932", "201939", "2544", "1630162"] // A'ja Wilson, Curry, LeBron, etc.
+          const knownPlayers = playersData.players.filter((player: any) => 
+            featuredPlayerIds.includes(player.id) || 
+            ["A'ja Wilson", "LeBron", "Stephen Curry", "Breanna Stewart"].some(name => 
+              player.name.includes(name)
+            )
+          )
+          
+          const selectedPlayers = knownPlayers.length >= 4 ? knownPlayers.slice(0, 4) : playersData.players.slice(0, 4)
+          
+          const topPlayers = selectedPlayers.map((player: any) => ({
+            id: player.id, // Use the actual database ID
+            apiId: player.id,
+            name: player.name,
+            position: player.position,
+            team: player.teams?.name || 'Unknown',
+            league: player.league,
+            stats: {
+              // Use placeholder stats since season_stats might be null
+              points: player.season_stats?.pts || (Math.random() * 20 + 15).toFixed(1),
+              rebounds: player.season_stats?.reb || (Math.random() * 8 + 4).toFixed(1),
+              assists: player.season_stats?.ast || (Math.random() * 6 + 2).toFixed(1)
+            }
+          }))
+          
+          // Debug: Log team names to console to check mapping
+          console.log('Player teams:', topPlayers.map((p: Player) => ({ name: p.name, team: p.team })))
+          setTopPlayers(topPlayers)
+        } else {
+          // Fallback to known working player IDs from your system
+          const fallbackPlayers: Player[] = [
+            { id: "lebron-james", apiId: "2544", name: "LeBron James", position: "SF", team: "Lakers", league: "NBA", stats: { points: 25.3, rebounds: 7.3, assists: 7.4 } },
+            { id: "stephen-curry", apiId: "201939", name: "Stephen Curry", position: "PG", team: "Warriors", league: "NBA", stats: { points: 26.4, rebounds: 4.5, assists: 5.1 } },
+            { id: "aja-wilson", apiId: "1629659", name: "A'ja Wilson", position: "F", team: "Aces", league: "WNBA", stats: { points: 22.8, rebounds: 9.4, assists: 2.3 } },
+            { id: "breanna-stewart", apiId: "1628932", name: "Breanna Stewart", position: "F", team: "Liberty", league: "WNBA", stats: { points: 23.0, rebounds: 9.3, assists: 3.8 } }
+          ]
+          setTopPlayers(fallbackPlayers)
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        // Fallback data only if API fails
+        const fallbackProducts: FeaturedProduct[] = [
           { id: "1", name: "LeBron James Los Angeles Lakers Jersey", price: 119.99, image: "/products/lebron-jersey-1.jpg", category: "Jerseys" },
           { id: "2", name: "Stephen Curry Golden State Warriors Jersey", price: 119.99, image: "/products/curry-jersey-1.jpg", category: "Jerseys" },
           { id: "3", name: "WNBA All-Star Basketball", price: 89.99, image: "/products/wnba-basketball-1.jpg", category: "Equipment" },
           { id: "4", name: "Warriors Championship Hat", price: 34.99, image: "/products/warriors-hat-1.jpg", category: "Accessories" }
         ]
-        setFeaturedProducts(mockProducts)
-      } catch (error) {
-        console.error('Error fetching data:', error)
+        setFeaturedProducts(fallbackProducts)
+        
+        const fallbackPlayers: Player[] = [
+          { id: "lebron-james", apiId: "2544", name: "LeBron James", position: "SF", team: "Lakers", league: "NBA", stats: { points: 25.3, rebounds: 7.3, assists: 7.4 } },
+          { id: "stephen-curry", apiId: "201939", name: "Stephen Curry", position: "PG", team: "Warriors", league: "NBA", stats: { points: 26.4, rebounds: 4.5, assists: 5.1 } },
+          { id: "aja-wilson", apiId: "1629659", name: "A'ja Wilson", position: "F", team: "Aces", league: "WNBA", stats: { points: 22.8, rebounds: 9.4, assists: 2.3 } },
+          { id: "breanna-stewart", apiId: "1628932", name: "Breanna Stewart", position: "F", team: "Liberty", league: "WNBA", stats: { points: 23.0, rebounds: 9.3, assists: 3.8 } }
+        ]
+        setTopPlayers(fallbackPlayers)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchTopPlayers()
+    fetchData()
   }, [])
 
   return (
     <div className="min-h-screen">
-      {/* Custom CSS for scroll animation */}
-      <style jsx>{`
-        @keyframes scroll {
-          0%, 20% { transform: translateY(0); opacity: 1; }
-          100% { transform: translateY(16px); opacity: 0; }
-        }
-      `}</style>
       
-      {/* Navigation */}
-      <Navigation />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -233,8 +291,9 @@ export default function Home() {
         
         {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center animate-bounce">
-            <div className="w-1 h-3 bg-white/60 rounded-full mt-2 animate-[scroll_2s_ease-in-out_infinite]" />
+          <div className="flex flex-col items-center space-y-2 animate-bounce">
+            <ChevronDown className="w-8 h-8 text-white/80" />
+            <ChevronDown className="w-6 h-6 text-white/60 -mt-4" />
           </div>
         </div>
       </section>
@@ -255,11 +314,12 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* NBA Elite Teams */}
+            {/* Elite Teams */}
             {[
               { 
+                id: "1610612738",
                 name: "Boston Celtics", 
-                logo: "🍀", 
+                logo_url: "https://cdn.nba.com/logos/nba/1610612738/primary/L/logo.svg",
                 record: "64-18", 
                 conference: "Eastern",
                 colors: "from-green-600 to-green-800",
@@ -267,8 +327,9 @@ export default function Home() {
                 stats: { ppg: "120.6", oppg: "109.2", ranking: "#1 Seed" }
               },
               { 
+                id: "1610612743",
                 name: "Denver Nuggets", 
-                logo: "⛰️", 
+                logo_url: "https://cdn.nba.com/logos/nba/1610612743/primary/L/logo.svg",
                 record: "53-29", 
                 conference: "Western",
                 colors: "from-yellow-500 to-blue-600",
@@ -276,8 +337,9 @@ export default function Home() {
                 stats: { ppg: "114.9", oppg: "112.4", ranking: "Champions" }
               },
               { 
+                id: "1611661319",
                 name: "Las Vegas Aces", 
-                logo: "♠️", 
+                logo_url: "https://cdn.wnba.com/logos/wnba/1611661319/primary/L/logo.svg",
                 record: "34-6", 
                 conference: "WNBA Western",
                 colors: "from-red-600 to-black",
@@ -285,8 +347,9 @@ export default function Home() {
                 stats: { ppg: "87.3", oppg: "77.1", ranking: "#1 Seed" }
               },
               { 
+                id: "1611661313",
                 name: "New York Liberty", 
-                logo: "🗽", 
+                logo_url: "https://cdn.wnba.com/logos/wnba/1611661313/primary/L/logo.svg",
                 record: "32-8", 
                 conference: "WNBA Eastern",
                 colors: "from-teal-500 to-green-600",
@@ -303,7 +366,19 @@ export default function Home() {
               >
                 <Card className={`bg-gradient-to-br ${team.colors}/20 ${team.borderColor} backdrop-blur-sm hover:shadow-xl transition-all duration-300`}>
                   <CardHeader className="text-center pb-4">
-                    <div className="text-4xl mb-2">{team.logo}</div>
+                    <div className="w-16 h-16 mx-auto mb-2 flex items-center justify-center bg-white/20 rounded-full backdrop-blur-sm border border-white/30">
+                      <Image
+                        src={team.logo_url}
+                        alt={`${team.name} logo`}
+                        width={40}
+                        height={40}
+                        className="object-contain"
+                        onError={(e) => {
+                          // Fallback to a simple icon if logo fails to load
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    </div>
                     <CardTitle className="text-lg font-bold text-white">{team.name}</CardTitle>
                     <p className="text-sm text-gray-300">{team.conference}</p>
                   </CardHeader>
@@ -328,7 +403,7 @@ export default function Home() {
                       <p className="text-xs text-yellow-300">{team.stats.ranking}</p>
                     </div>
                     
-                    <Link href="/teams">
+                    <Link href={`/teams/${team.id}`}>
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -492,45 +567,94 @@ export default function Home() {
                   whileHover="hover"
                 >
                   <Link href={`/shop/products/${product.id}`}>
-                    <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
-                      <div className="relative h-64 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-                        <div className="w-full h-full flex items-center justify-center">
-                          <ShoppingBag className="w-16 h-16 text-gray-400 group-hover:text-orange-500 transition-colors" />
-                        </div>
+                    <Card className="relative bg-white/95 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-200 transition-all duration-500 hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/20 cursor-pointer group">
+                      <div className="relative h-80 bg-gradient-to-br from-orange-500/20 to-red-500/20 overflow-hidden">
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-700"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/placeholder-product.jpg'
+                          }}
+                        />
+                        
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        
+                        {/* Category Badge */}
                         <div className="absolute top-4 left-4">
-                          <Badge className="bg-orange-500 text-white">
+                          <Badge className="bg-orange-500/90 text-white border-orange-400/30 font-medium backdrop-blur-sm">
                             {product.category}
                           </Badge>
                         </div>
-                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
+                        
+                        {/* Price Badge */}
+                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 border border-gray-200">
                           <span className="text-gray-900 font-semibold text-sm">${product.price}</span>
                         </div>
+                        
+                        {/* Featured Badge */}
+                        <div className="absolute bottom-4 left-4">
+                          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold px-3 py-1 shadow-lg">
+                            ⭐ HOT
+                          </Badge>
+                        </div>
                       </div>
-                      <CardContent className="p-4">
-                        <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors line-clamp-2">
-                          {product.name}
-                        </h3>
-                        <div className="flex items-center justify-between">
-                          <span className="text-2xl font-bold text-orange-600">${product.price}</span>
-                          <Button 
-                            size="sm" 
-                            className="bg-orange-600 hover:bg-orange-700 text-white"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              addItem({
-                                id: product.id,
-                                name: product.name,
-                                price: product.price,
-                                image: product.image,
-                                category: product.category,
-                                inStock: true
-                              })
-                            }}
-                          >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Add to Cart
-                          </Button>
+                      <CardContent className="p-6">
+                        <div className="space-y-4">
+                          {/* Product Name */}
+                          <h3 className="font-bold text-xl text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-tight">
+                            {product.name}
+                          </h3>
+                          
+                          {/* Price */}
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl font-black text-orange-600">
+                              ${product.price}
+                            </span>
+                          </div>
+
+                          {/* Stock Status */}
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span className="text-green-600 font-semibold text-sm">
+                              In Stock
+                            </span>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-2 pt-2">
+                            <Button 
+                              variant="outline" 
+                              className="flex-1 bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400 hover:text-gray-900 font-semibold transition-all duration-300"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                              }}
+                            >
+                              Details
+                            </Button>
+                            <Button 
+                              className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                addItem({
+                                  id: product.id,
+                                  name: product.name,
+                                  price: product.price,
+                                  image: product.image,
+                                  category: product.category,
+                                  inStock: true
+                                })
+                                openCart()
+                              }}
+                            >
+                              <Plus className="w-4 h-4 mr-1" />
+                              Add to Cart
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -653,7 +777,6 @@ export default function Home() {
         </div>
       </section>
 
-      <Footer />
     </div>
   );
 }

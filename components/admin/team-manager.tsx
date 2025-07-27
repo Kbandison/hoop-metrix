@@ -25,6 +25,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import TeamLogoUpload from '@/components/admin/team-logo-upload'
 
 interface Team {
   id: string
@@ -63,7 +64,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ onRefresh }) => {
     name: '',
     city: '',
     abbreviation: '',
-    league: 'NBA',
+    league: 'Custom',
     logo_url: '',
     primary_color: '',
     secondary_color: '',
@@ -156,7 +157,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ onRefresh }) => {
       name: '',
       city: '',
       abbreviation: '',
-      league: 'NBA',
+      league: 'Custom',
       logo_url: '',
       primary_color: '',
       secondary_color: '',
@@ -284,28 +285,23 @@ const TeamManager: React.FC<TeamManagerProps> = ({ onRefresh }) => {
                 </div>
                 <div>
                   <Label htmlFor="league">League *</Label>
-                  <Select value={formData.league} onValueChange={(value) => setFormData(prev => ({ ...prev, league: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="NBA">NBA</SelectItem>
-                      <SelectItem value="WNBA">WNBA</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="league"
+                    value="Custom"
+                    readOnly
+                    className="bg-gray-50 text-gray-600"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Custom teams are automatically assigned to the Custom league</p>
                 </div>
               </div>
 
               {/* Visual */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-3">
-                  <Label htmlFor="logo_url">Logo URL</Label>
-                  <Input
-                    id="logo_url"
+                  <TeamLogoUpload
                     value={formData.logo_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, logo_url: e.target.value }))}
-                    placeholder="https://yourdomain.com/logo.png (leave empty for default)"
-                    type="url"
+                    onChange={(value) => setFormData(prev => ({ ...prev, logo_url: value }))}
+                    teamId={editingTeam?.id || 'new-team'}
                   />
                 </div>
                 <div>
@@ -401,8 +397,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ onRefresh }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Custom Teams</SelectItem>
-            <SelectItem value="NBA">Custom NBA</SelectItem>
-            <SelectItem value="WNBA">Custom WNBA</SelectItem>
+            <SelectItem value="Custom">Custom League</SelectItem>
           </SelectContent>
         </Select>
       </div>

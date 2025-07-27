@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import Navigation from '@/components/layout/navigation'
 import { useCart, createCartItemKey } from '@/lib/contexts/cart-context'
 
 export default function CartPage() {
@@ -33,7 +32,6 @@ export default function CartPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Navigation />
       
       <div className="container mx-auto px-4 py-8 pt-32">
         {/* Header */}
@@ -80,7 +78,7 @@ export default function CartPage() {
             <div className="lg:col-span-2">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Cart Items</CardTitle>
+                  <CardTitle className="text-gray-900">Cart Items</CardTitle>
                   <Button
                     variant="outline"
                     size="sm"
@@ -103,12 +101,26 @@ export default function CartPage() {
                       >
                         {/* Product Image */}
                         <div className="relative w-24 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                          <Image
-                            src="/placeholder-product.jpg"
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                          />
+                          {item.image ? (
+                            <Image
+                              src={item.image}
+                              alt={item.name}
+                              fill
+                              className="object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement
+                                target.style.display = 'none'
+                                const parent = target.parentElement
+                                if (parent) {
+                                  parent.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500 text-xs font-medium">No Image</div>'
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center h-full text-gray-500 text-xs font-medium">
+                              No Image
+                            </div>
+                          )}
                         </div>
 
                         {/* Product Details */}
@@ -156,7 +168,7 @@ export default function CartPage() {
                                 >
                                   <Minus className="w-3 h-3" />
                                 </Button>
-                                <span className="font-medium text-lg min-w-[2rem] text-center">
+                                <span className="font-medium text-lg min-w-[2rem] text-center text-gray-900">
                                   {item.quantity}
                                 </span>
                                 <Button
@@ -197,17 +209,17 @@ export default function CartPage() {
             <div className="lg:col-span-1">
               <Card className="sticky top-32">
                 <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
+                  <CardTitle className="text-gray-900">Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-gray-900 [&_label]:text-gray-900 [&_label]:font-medium [&_input]:bg-white [&_input]:text-gray-900 [&_button]:text-gray-900">
                   {/* Promo Code */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Promo Code
                     </label>
                     <div className="flex gap-2">
-                      <Input placeholder="Enter code" />
-                      <Button variant="outline">Apply</Button>
+                      <Input placeholder="Enter code" className="text-gray-900" />
+                      <Button variant="outline" className="text-gray-900 border-gray-300 hover:bg-gray-50">Apply</Button>
                     </div>
                   </div>
 
@@ -235,8 +247,8 @@ export default function CartPage() {
                     </div>
                     
                     {totalAmount < 75 && (
-                      <div className="text-xs text-gray-700 bg-gray-50 p-2 rounded">
-                        Add ${(75 - totalAmount).toFixed(2)} more for free shipping!
+                      <div className="text-sm text-gray-900 bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                        <span className="font-medium">💡 Add ${(75 - totalAmount).toFixed(2)} more for free shipping!</span>
                       </div>
                     )}
                   </div>
@@ -257,10 +269,19 @@ export default function CartPage() {
 
                   {/* Security Features */}
                   <div className="text-center pt-4 border-t border-gray-200">
-                    <div className="text-xs text-gray-700 space-y-1">
-                      <div>🔒 Secure checkout with SSL encryption</div>
-                      <div>📦 Free returns within 30 days</div>
-                      <div>🏆 100% authentic products</div>
+                    <div className="text-sm text-gray-800 space-y-2 font-medium">
+                      <div className="flex items-center justify-center gap-2">
+                        <span>🔒</span>
+                        <span>Secure checkout with SSL encryption</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-2">
+                        <span>📦</span>
+                        <span>Free returns within 30 days</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-2">
+                        <span>🏆</span>
+                        <span>100% authentic products</span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

@@ -8,6 +8,10 @@ export interface AuthUser {
   email: string
   role?: 'user' | 'admin'
   membership_status?: 'free' | 'premium'
+  user_metadata?: {
+    full_name?: string
+    avatar_url?: string
+  }
 }
 
 export class AuthClient {
@@ -81,7 +85,8 @@ export class AuthClient {
         id: user.id,
         email: user.email || '',
         role: 'user', // Will be updated by context if admin
-        membership_status: 'free' // Will be updated by context if premium
+        membership_status: 'free', // Will be updated by context if premium
+        user_metadata: user.user_metadata
       }
     } catch (error) {
       console.error('Error getting current user:', error)

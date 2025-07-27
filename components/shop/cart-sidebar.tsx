@@ -68,16 +68,16 @@ export default function CartSidebar() {
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b">
               <div className="flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5" />
-                <h2 className="text-xl font-bold">Shopping Cart</h2>
+                <ShoppingBag className="w-5 h-5 text-gray-900" />
+                <h2 className="text-xl font-bold text-gray-900">Shopping Cart</h2>
                 {totalItems > 0 && (
-                  <Badge className="bg-kentucky-blue-600">
+                  <Badge className="bg-kentucky-blue-600 text-white">
                     {totalItems}
                   </Badge>
                 )}
               </div>
               <Button variant="ghost" size="sm" onClick={closeCart}>
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-gray-900" />
               </Button>
             </div>
 
@@ -113,12 +113,26 @@ export default function CartSidebar() {
                         >
                           {/* Product Image */}
                           <div className="relative w-16 h-16 bg-gray-200 rounded-md overflow-hidden flex-shrink-0">
-                            <Image
-                              src="/placeholder-product.jpg"
-                              alt={item.name}
-                              fill
-                              className="object-cover"
-                            />
+                            {item.image ? (
+                              <Image
+                                src={item.image}
+                                alt={item.name}
+                                fill
+                                className="object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement
+                                  target.style.display = 'none'
+                                  const parent = target.parentElement
+                                  if (parent) {
+                                    parent.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500 text-xs font-medium">No Image</div>'
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="flex items-center justify-center h-full text-gray-500 text-xs font-medium">
+                                No Image
+                              </div>
+                            )}
                           </div>
 
                           {/* Product Details */}
@@ -141,11 +155,14 @@ export default function CartSidebar() {
                               )}
                             </div>
 
-                            {/* Price */}
+                            {/* Price and Quantity */}
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <span className="font-bold text-gray-900">
-                                  ${item.price.toFixed(2)}
+                                  ${(item.price * item.quantity).toFixed(2)}
+                                </span>
+                                <span className="text-xs text-gray-600">
+                                  ({item.quantity}x ${item.price.toFixed(2)})
                                 </span>
                                 {item.originalPrice && (
                                   <span className="text-xs text-gray-500 line-through">
@@ -154,35 +171,6 @@ export default function CartSidebar() {
                                 )}
                               </div>
 
-                              {/* Quantity Controls */}
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="w-8 h-8 p-0"
-                                  onClick={() => handleQuantityChange(itemKey, item.quantity - 1)}
-                                >
-                                  <Minus className="w-3 h-3" />
-                                </Button>
-                                <span className="font-medium text-sm min-w-[1.5rem] text-center">
-                                  {item.quantity}
-                                </span>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="w-8 h-8 p-0"
-                                  onClick={() => handleQuantityChange(itemKey, item.quantity + 1)}
-                                >
-                                  <Plus className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            </div>
-
-                            {/* Subtotal and Remove */}
-                            <div className="flex items-center justify-between mt-2">
-                              <span className="text-sm font-medium text-gray-700">
-                                Subtotal: ${(item.price * item.quantity).toFixed(2)}
-                              </span>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -191,6 +179,32 @@ export default function CartSidebar() {
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
+                            </div>
+
+                            {/* Quantity Controls */}
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-sm text-gray-600">Quantity:</span>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-7 h-7 p-0 text-gray-700 border-gray-300"
+                                  onClick={() => handleQuantityChange(itemKey, item.quantity - 1)}
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </Button>
+                                <span className="font-medium text-sm min-w-[1.5rem] text-center text-gray-900">
+                                  {item.quantity}
+                                </span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-7 h-7 p-0 text-gray-700 border-gray-300"
+                                  onClick={() => handleQuantityChange(itemKey, item.quantity + 1)}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </motion.div>
@@ -203,7 +217,7 @@ export default function CartSidebar() {
 
             {/* Footer */}
             {items.length > 0 && (
-              <div className="border-t p-6 space-y-4 text-gray-900">
+              <div className="border-t p-6 space-y-4 bg-white text-gray-900">
                 {/* Total */}
                 <div className="flex items-center justify-between text-lg font-bold">
                   <span>Total ({totalItems} items):</span>
@@ -213,12 +227,12 @@ export default function CartSidebar() {
                 {/* Action Buttons */}
                 <div className="space-y-2">
                   <Link href="/shop/cart" className="block" onClick={closeCart}>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full border-gray-300 text-gray-700 hover:bg-gray-50">
                       View Cart
                     </Button>
                   </Link>
                   <Link href="/shop/checkout" className="block" onClick={closeCart}>
-                    <Button className="w-full bg-kentucky-blue-600 hover:bg-kentucky-blue-700">
+                    <Button className="w-full bg-kentucky-blue-600 hover:bg-kentucky-blue-700 text-white">
                       Checkout
                     </Button>
                   </Link>

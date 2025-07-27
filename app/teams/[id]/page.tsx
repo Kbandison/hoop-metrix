@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PlayerImage } from '@/components/ui/player-image'
-import Navigation from '@/components/layout/navigation'
 
 interface Team {
   id: string
@@ -228,7 +227,6 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
   if (loading) {
     return (
       <div className="min-h-screen">
-        <Navigation />
         <div className="container mx-auto px-4 py-8" style={{ marginTop: '8rem' }}>
           <Skeleton className="h-12 w-48 mb-8" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -255,7 +253,6 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
   if (!team) {
     return (
       <div className="min-h-screen">
-        <Navigation />
         <div className="container mx-auto px-4 py-8 text-center" style={{ marginTop: '8rem' }}>
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Team not found</h1>
           <Link href="/teams">
@@ -274,7 +271,6 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
       transition={{ duration: 0.5 }}
     >
       {/* Navigation */}
-      <Navigation />
       
       {/* Hero Section */}
       <div 

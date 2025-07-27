@@ -70,7 +70,10 @@ export async function GET(request: NextRequest) {
       total: parseFloat(order.total_amount.toString()),
       status: order.status,
       items: order.order_items?.length || 0,
-      products: order.order_items?.map(item => item.products?.name).join(', ')
+      products: order.order_items?.map(item => {
+        const product = Array.isArray(item.products) ? item.products[0] : item.products
+        return product?.name
+      }).join(', ')
     })) || []
 
     // Check if user is admin

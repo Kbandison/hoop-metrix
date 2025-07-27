@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import Navigation from '@/components/layout/navigation'
-import Footer from '@/components/layout/footer'
 
 interface Plan {
   id: string
@@ -193,7 +191,6 @@ export default function MembershipPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <Navigation />
       
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden">
@@ -299,15 +296,20 @@ export default function MembershipPage() {
               <span className={`text-sm font-medium ${billingCycle === 'yearly' ? 'text-white' : 'text-gray-400'}`}>
                 Yearly
               </span>
-              {billingCycle === 'yearly' && (
-                <motion.div
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="ml-2"
-                >
-                  <Badge className="bg-green-500 text-white">Save 17%</Badge>
-                </motion.div>
-              )}
+              <div className="ml-2 w-20 h-6 flex items-center justify-center">
+                <AnimatePresence>
+                  {billingCycle === 'yearly' && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Badge className="bg-green-500 text-white">Save 17%</Badge>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </motion.div>
 
@@ -565,8 +567,6 @@ export default function MembershipPage() {
           </motion.div>
         </div>
       </section>
-      
-      <Footer />
     </div>
   )
 }

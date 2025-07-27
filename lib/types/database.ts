@@ -107,6 +107,7 @@ export type Database = {
           name: string
           description: string
           price: number
+          original_price: number | null
           image_url: string
           category: string
           stock_quantity: number
@@ -119,6 +120,7 @@ export type Database = {
           name: string
           description: string
           price: number
+          original_price?: number | null
           image_url: string
           category: string
           stock_quantity?: number
@@ -131,6 +133,7 @@ export type Database = {
           name?: string
           description?: string
           price?: number
+          original_price?: number | null
           image_url?: string
           category?: string
           stock_quantity?: number
@@ -254,6 +257,38 @@ export type Database = {
           user_id?: string
           role?: 'admin' | 'editor'
           permissions?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_carts: {
+        Row: {
+          id: string
+          user_id: string
+          product_id: string
+          quantity: number
+          selected_size: string | null
+          selected_color: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          product_id: string
+          quantity?: number
+          selected_size?: string | null
+          selected_color?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          product_id?: string
+          quantity?: number
+          selected_size?: string | null
+          selected_color?: string | null
           created_at?: string
           updated_at?: string
         }

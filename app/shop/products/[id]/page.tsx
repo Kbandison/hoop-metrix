@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import Navigation from '@/components/layout/navigation'
 import { useCart } from '@/lib/contexts/cart-context'
 
 interface Product {
@@ -175,7 +174,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   if (loading) {
     return (
       <div className="min-h-screen">
-        <Navigation />
         <div className="container mx-auto px-4 py-8 pt-32">
           <div className="grid lg:grid-cols-2 gap-12">
             <div>
@@ -202,7 +200,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   if (!product) {
     return (
       <div className="min-h-screen">
-        <Navigation />
         <div className="container mx-auto px-4 py-8 pt-32 text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Product not found</h1>
           <Link href="/shop">
@@ -220,7 +217,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Navigation />
       
       <div className="container mx-auto px-4 py-8 pt-32">
         {/* Breadcrumb */}

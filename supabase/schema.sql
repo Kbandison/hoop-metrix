@@ -49,6 +49,7 @@ CREATE TABLE products (
     name TEXT NOT NULL,
     description TEXT NOT NULL,
     price DECIMAL(10,2) NOT NULL CHECK (price > 0),
+    original_price DECIMAL(10,2) CHECK (original_price > 0),
     image_url TEXT NOT NULL,
     category TEXT NOT NULL,
     stock_quantity INTEGER DEFAULT 0 CHECK (stock_quantity >= 0),
@@ -156,6 +157,26 @@ CREATE TRIGGER update_admin_users_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at();
 
+-- User carts table for persistent cart across devices
+CREATE TABLE user_carts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
+    selected_size TEXT,
+    selected_color TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    -- Ensure unique combinations of user, product, size, and color
+    UNIQUE(user_id, product_id, selected_size, selected_color)
+);
+
+-- Add updated_at trigger for user_carts
+CREATE TRIGGER update_user_carts_updated_at
+    BEFORE UPDATE ON user_carts
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at();
+
 -- Row Level Security (RLS) policies
 ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE players ENABLE ROW LEVEL SECURITY;
@@ -164,6 +185,7 @@ ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_carts ENABLE ROW LEVEL SECURITY;
 
 -- Public read access for teams and players
 CREATE POLICY "Teams are viewable by everyone" ON teams
@@ -195,6 +217,13 @@ CREATE POLICY "Users can view own order items" ON order_items
             SELECT user_id FROM orders WHERE orders.id = order_items.order_id
         )
     );
+
+-- User cart policies
+CREATE POLICY "Users can view own cart" ON user_carts
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage own cart" ON user_carts
+    FOR ALL USING (auth.uid() = user_id);
 
 -- Admin policies (to be refined based on admin system)
 CREATE POLICY "Admins can manage everything on teams" ON teams

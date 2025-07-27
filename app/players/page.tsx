@@ -11,8 +11,6 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import Navigation from '@/components/layout/navigation'
-import Footer from '@/components/layout/footer'
 
 interface Player {
   id: string
@@ -233,8 +231,6 @@ export default function PlayersPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Navigation */}
-      <Navigation />
       
       {/* Header Section */}
       <motion.section 
@@ -251,7 +247,7 @@ export default function PlayersPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
           >
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-kentucky-blue-400 to-kentucky-blue-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-6xl font-bold mb-8 bg-gradient-to-r from-kentucky-blue-400 to-kentucky-blue-600 bg-clip-text text-transparent leading-tight">
               Player Directory
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-8">
@@ -317,10 +313,10 @@ export default function PlayersPage() {
               </div>
             </motion.div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+            <div className="flex flex-col lg:flex-row gap-4 items-end">
               {/* Search */}
               <motion.div 
-                className="lg:col-span-6"
+                className="flex-1"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.9, duration: 0.5 }}
@@ -332,68 +328,71 @@ export default function PlayersPage() {
                     placeholder="Search by name, team, position..."
                     value={search}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-12 h-12 border-2 border-gray-200 focus:border-kentucky-blue-500 rounded-xl font-medium"
+                    className="pl-12 h-12 border-2 border-gray-200 focus:border-kentucky-blue-500 rounded-xl font-medium bg-white"
                   />
                 </div>
               </motion.div>
 
-              {/* League Filter */}
-              <motion.div 
-                className="lg:col-span-3"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1, duration: 0.5 }}
-              >
-                <label className="block text-sm font-semibold text-gray-700 mb-2">League</label>
-                <Select value={league || 'all'} onValueChange={handleLeagueChange}>
-                  <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-kentucky-blue-500 rounded-xl font-medium">
-                    <SelectValue placeholder="All Leagues" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white text-gray-900 border border-gray-200 shadow-lg">
-                    <SelectItem value="all" className="font-medium text-gray-900 hover:bg-gray-100">
-                      <div className="flex items-center gap-2">
-                        <span>🏆</span>
-                        All Leagues
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="NBA" className="font-medium text-gray-900 hover:bg-gray-100">
-                      <div className="flex items-center gap-2">
-                        <span className="text-blue-600">🏀</span>
-                        NBA
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="WNBA" className="font-medium text-gray-900 hover:bg-gray-100">
-                      <div className="flex items-center gap-2">
-                        <span className="text-orange-600">🏀</span>
-                        WNBA
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </motion.div>
+              {/* League and Position Filters - Side by Side */}
+              <div className="flex gap-2 lg:min-w-0">
+                {/* League Filter */}
+                <motion.div 
+                  className="w-full lg:w-40"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1, duration: 0.5 }}
+                >
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">League</label>
+                  <Select value={league || 'all'} onValueChange={handleLeagueChange}>
+                    <SelectTrigger className="h-12 min-h-[48px] border-2 border-gray-200 focus:border-kentucky-blue-500 rounded-xl font-medium !bg-white text-gray-900 px-4 py-3">
+                      <SelectValue placeholder="All Leagues" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" className="font-medium text-gray-900 hover:bg-gray-100">
+                        <div className="flex items-center gap-2">
+                          <span>🏆</span>
+                          All Leagues
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="NBA" className="font-medium text-gray-900 hover:bg-gray-100">
+                        <div className="flex items-center gap-2">
+                          <span className="text-blue-600">🏀</span>
+                          NBA
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="WNBA" className="font-medium text-gray-900 hover:bg-gray-100">
+                        <div className="flex items-center gap-2">
+                          <span className="text-orange-600">🏀</span>
+                          WNBA
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </motion.div>
 
-              {/* Position Filter */}
-              <motion.div 
-                className="lg:col-span-3"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.1, duration: 0.5 }}
-              >
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Position</label>
-                <Select value={position || 'all'} onValueChange={handlePositionChange}>
-                  <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-kentucky-blue-500 rounded-xl font-medium">
-                    <SelectValue placeholder="All Positions" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white text-gray-900 border border-gray-200 shadow-lg">
-                    <SelectItem value="all" className="font-medium text-gray-900 hover:bg-gray-100">All Positions</SelectItem>
-                    <SelectItem value="PG" className="font-medium text-gray-900 hover:bg-gray-100">Point Guard</SelectItem>
-                    <SelectItem value="SG" className="font-medium text-gray-900 hover:bg-gray-100">Shooting Guard</SelectItem>
-                    <SelectItem value="SF" className="font-medium text-gray-900 hover:bg-gray-100">Small Forward</SelectItem>
-                    <SelectItem value="PF" className="font-medium text-gray-900 hover:bg-gray-100">Power Forward</SelectItem>
-                    <SelectItem value="C" className="font-medium text-gray-900 hover:bg-gray-100">Center</SelectItem>
-                  </SelectContent>
-                </Select>
-              </motion.div>
+                {/* Position Filter */}
+                <motion.div 
+                  className="w-full lg:w-44"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.1, duration: 0.5 }}
+                >
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Position</label>
+                  <Select value={position || 'all'} onValueChange={handlePositionChange}>
+                    <SelectTrigger className="h-12 min-h-[48px] border-2 border-gray-200 focus:border-kentucky-blue-500 rounded-xl font-medium !bg-white text-gray-900 px-4 py-3">
+                      <SelectValue placeholder="All Positions" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" className="font-medium text-gray-900 hover:bg-gray-100">All Positions</SelectItem>
+                      <SelectItem value="PG" className="font-medium text-gray-900 hover:bg-gray-100">Point Guard</SelectItem>
+                      <SelectItem value="SG" className="font-medium text-gray-900 hover:bg-gray-100">Shooting Guard</SelectItem>
+                      <SelectItem value="SF" className="font-medium text-gray-900 hover:bg-gray-100">Small Forward</SelectItem>
+                      <SelectItem value="PF" className="font-medium text-gray-900 hover:bg-gray-100">Power Forward</SelectItem>
+                      <SelectItem value="C" className="font-medium text-gray-900 hover:bg-gray-100">Center</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </motion.div>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -616,8 +615,6 @@ export default function PlayersPage() {
           )}
         </div>
       </section>
-      
-      <Footer />
     </div>
   )
 }

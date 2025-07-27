@@ -2,11 +2,10 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
-import { ShoppingCart, User, ChevronDown, Menu, X, LogIn, LogOut, UserCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { ShoppingCart, User, ChevronDown, Menu, X, LogIn, LogOut, UserCircle, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useCart } from '@/lib/contexts/cart-context'
 import { useAuth } from '@/lib/auth/auth-context'
@@ -33,11 +32,51 @@ const navItems = [
 
 export default function Navigation() {
   const { totalItems, toggleCart } = useCart()
-  const { user, signOut, loading } = useAuth()
+  const { user, signOut, loading, isAdmin } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
+  const [isTeamsDropdownOpen, setIsTeamsDropdownOpen] = useState(false)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
+  const hamburgerButtonRef = useRef<HTMLButtonElement>(null)
+  const profileDropdownRef = useRef<HTMLDivElement>(null)
+  const teamsDropdownRef = useRef<HTMLDivElement>(null)
   
-  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen)
   const closeMobileMenu = () => setIsMobileMenuOpen(false)
+  const closeProfileDropdown = () => setIsProfileDropdownOpen(false)
+  const closeTeamsDropdown = () => setIsTeamsDropdownOpen(false)
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Close mobile menu if clicking outside (but not on hamburger button)
+      if (mobileMenuRef.current && 
+          !mobileMenuRef.current.contains(event.target as Node) &&
+          hamburgerButtonRef.current &&
+          !hamburgerButtonRef.current.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false)
+      }
+      
+      // Close profile dropdown if clicking outside
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false)
+      }
+      
+      // Close teams dropdown if clicking outside
+      if (teamsDropdownRef.current && !teamsDropdownRef.current.contains(event.target as Node)) {
+        setIsTeamsDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  // Toggle mobile menu when clicking hamburger button
+  const handleHamburgerClick = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
   
   const getUserInitial = (name: string) => {
     return name.split(' ')[0].charAt(0).toUpperCase()
@@ -51,14 +90,15 @@ export default function Navigation() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-40">
       <div className="container mx-auto px-4 py-6">
-        <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-full px-8 py-4 flex items-center justify-between shadow-lg">
+        <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-full px-8 py-4 flex items-center justify-between shadow-lg min-h-[64px] relative">
           {/* Mobile Hamburger - Left */}
           <div className="lg:hidden flex items-center">
             <Button
+              ref={hamburgerButtonRef}
               variant="ghost"
               size="sm"
               className="relative text-white hover:bg-white/10 p-2"
-              onClick={toggleMobileMenu}
+              onClick={handleHamburgerClick}
             >
               <Menu className="w-5 h-5" />
               {/* Cart indicator on mobile hamburger */}
@@ -70,14 +110,14 @@ export default function Navigation() {
             </Button>
           </div>
 
-          {/* Logo - Clickable, centered on mobile */}
-          <Link href="/" className="flex items-center space-x-3 lg:space-x-3">
+          {/* Logo - Clickable, absolutely centered on mobile only */}
+          <Link href="/" className="flex items-center space-x-3 lg:space-x-3 lg:static lg:transform-none lg:relative absolute left-1/2 transform -translate-x-1/2 lg:left-auto lg:translate-x-0">
             <Image
               src="/HM_logo_transparent.png"
               alt="HoopMetrix Logo"
               width={32}
               height={32}
-              className="rounded-full"
+              className="rounded-full w-10 h-10 lg:w-8 lg:h-8"
             />
             <span className="hidden lg:block text-white font-bold text-xl tracking-wide">HoopMetrix</span>
           </Link>
@@ -86,22 +126,47 @@ export default function Navigation() {
           <div className="hidden lg:flex items-center space-x-12">
             {navItems.map((item) => (
               item.hasDropdown ? (
-                <DropdownMenu key={item.name}>
-                  <DropdownMenuTrigger className="flex items-center gap-1 text-white text-sm font-medium hover:text-white/80 transition-colors">
+                <div key={item.name} ref={teamsDropdownRef} className="relative">
+                  <button
+                    className="flex items-center gap-1 text-white text-sm font-medium hover:text-white/80 transition-colors"
+                    onClick={() => setIsTeamsDropdownOpen(!isTeamsDropdownOpen)}
+                  >
                     {item.name}
                     <ChevronDown className="w-4 h-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" className="w-48 bg-white text-gray-900 border border-gray-200 shadow-lg">
-                    {item.dropdownItems?.map((dropdownItem) => (
-                      <DropdownMenuItem key={dropdownItem.name} asChild>
-                        <Link href={dropdownItem.href} className="w-full flex items-center gap-2 text-gray-900 hover:bg-gray-100">
-                          <span className={dropdownItem.color}>{dropdownItem.icon}</span>
-                          {dropdownItem.name}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </button>
+                  
+                  <AnimatePresence>
+                    {isTeamsDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-56 bg-black/70 backdrop-blur-md border border-white/20 shadow-xl rounded-2xl p-4 z-50"
+                      >
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ delay: 0.1, duration: 0.15 }}
+                          className="space-y-1"
+                        >
+                          {item.dropdownItems?.map((dropdownItem) => (
+                            <Link
+                              key={dropdownItem.name}
+                              href={dropdownItem.href}
+                              className="w-full flex items-center gap-3 text-white hover:text-white/80 transition-colors py-2 px-2 rounded-lg hover:bg-white/10 block"
+                              onClick={closeTeamsDropdown}
+                            >
+                              <span className={dropdownItem.color}>{dropdownItem.icon}</span>
+                              <span className="font-medium">{dropdownItem.name}</span>
+                            </Link>
+                          ))}
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               ) : (
                 <Link
                   key={item.name}
@@ -133,9 +198,15 @@ export default function Navigation() {
             </Button>
 
             {/* Auth/Profile Section */}
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-2 text-white hover:bg-white/10 rounded-lg p-2 transition-colors">
+            {loading ? (
+              <div className="w-8 h-8 bg-white/20 rounded-full animate-pulse"></div>
+            ) : user ? (
+              <div ref={profileDropdownRef} className="relative">
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
+                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                >
                   <Avatar className="w-8 h-8">
                     <AvatarImage src={user.user_metadata?.avatar_url || ''} alt={user.user_metadata?.full_name || user.email || ''} />
                     <AvatarFallback className="bg-kentucky-blue-600 text-white text-sm">
@@ -146,24 +217,57 @@ export default function Navigation() {
                     {user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'User'}
                   </span>
                   <ChevronDown className="w-4 h-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white text-gray-900 border border-gray-200 shadow-lg">
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="w-full flex items-center gap-2 text-gray-900 hover:bg-gray-100">
-                      <UserCircle className="w-4 h-4" />
-                      Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    className="w-full flex items-center gap-2 text-red-600 hover:bg-red-50 cursor-pointer"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Log Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </Button>
+                
+                <AnimatePresence>
+                  {isProfileDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="absolute right-0 mt-2 w-56 bg-black/70 backdrop-blur-md border border-white/20 shadow-xl rounded-2xl p-4 z-50"
+                    >
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ delay: 0.1, duration: 0.15 }}
+                      >
+                        <Link 
+                          href="/dashboard" 
+                          className="w-full flex items-center gap-3 text-white hover:text-white/80 transition-colors py-2 px-2 rounded-lg hover:bg-white/10 block"
+                          onClick={closeProfileDropdown}
+                        >
+                          <UserCircle className="w-5 h-5" />
+                          <span className="font-medium">Profile</span>
+                        </Link>
+                        {isAdmin && (
+                          <Link 
+                            href="/admin" 
+                            className="w-full flex items-center gap-3 text-orange-400 hover:text-orange-300 transition-colors py-2 px-2 rounded-lg hover:bg-orange-500/10 block"
+                            onClick={closeProfileDropdown}
+                          >
+                            <Settings className="w-5 h-5" />
+                            <span className="font-medium">Admin Dashboard</span>
+                          </Link>
+                        )}
+                        <div className="border-t border-white/20 my-2"></div>
+                        <button 
+                          className="w-full flex items-center gap-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 py-2 px-2 rounded-lg transition-colors"
+                          onClick={() => {
+                            handleLogout()
+                            closeProfileDropdown()
+                          }}
+                        >
+                          <LogOut className="w-5 h-5" />
+                          <span className="font-medium">Log Out</span>
+                        </button>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             ) : (
               <Link href="/auth/login">
                 <Button className="bg-kentucky-blue-600 hover:bg-kentucky-blue-700 text-white px-6 py-2 text-sm font-medium flex items-center gap-2">
@@ -180,6 +284,7 @@ export default function Navigation() {
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
+              ref={mobileMenuRef}
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -239,53 +344,6 @@ export default function Navigation() {
                       )}
                     </div>
                   </Button>
-
-                  {/* Mobile Auth Section */}
-                  <div className="border-t border-white/20 pt-4 mt-4">
-                    {user ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3 text-white mb-3">
-                          <Avatar className="w-8 h-8">
-                            <AvatarImage src={user.user_metadata?.avatar_url || ''} alt={user.user_metadata?.full_name || user.email || ''} />
-                            <AvatarFallback className="bg-kentucky-blue-600 text-white text-sm">
-                              {getUserInitial(user.user_metadata?.full_name || user.email || 'U')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium text-lg">
-                            {user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'User'}
-                          </span>
-                        </div>
-                        <Link
-                          href="/dashboard"
-                          className="flex items-center gap-3 text-white hover:text-white/80 transition-colors py-2"
-                          onClick={closeMobileMenu}
-                        >
-                          <UserCircle className="w-5 h-5" />
-                          <span className="font-medium text-lg">Profile</span>
-                        </Link>
-                        <Button
-                          variant="ghost"
-                          className="justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10 py-2 px-0 w-full"
-                          onClick={() => {
-                            handleLogout()
-                            closeMobileMenu()
-                          }}
-                        >
-                          <div className="flex items-center gap-3">
-                            <LogOut className="w-5 h-5" />
-                            <span className="font-medium text-lg">Log Out</span>
-                          </div>
-                        </Button>
-                      </div>
-                    ) : (
-                      <Link href="/auth/login" onClick={closeMobileMenu}>
-                        <Button className="w-full bg-kentucky-blue-600 hover:bg-kentucky-blue-700 text-white py-3 text-lg font-medium flex items-center justify-center gap-3">
-                          <LogIn className="w-5 h-5" />
-                          Log In / Sign Up
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
                 </div>
               </div>
             </motion.div>

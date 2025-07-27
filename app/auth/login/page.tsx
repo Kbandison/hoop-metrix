@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useAuth } from '@/lib/auth/auth-context'
-import Navigation from '@/components/layout/navigation'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -61,7 +60,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-kentucky-blue-50 to-white">
-      <Navigation />
       
       <div className="flex items-center justify-center px-4 py-32">
         <motion.div

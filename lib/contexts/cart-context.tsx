@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react'
+import { useAuth } from '@/lib/auth/auth-context'
 
 export interface CartItem {
   id: string
@@ -20,6 +21,7 @@ interface CartState {
   totalItems: number
   totalAmount: number
   isOpen: boolean
+  isLoading: boolean
 }
 
 type CartAction = 
@@ -31,6 +33,7 @@ type CartAction =
   | { type: 'OPEN_CART' }
   | { type: 'CLOSE_CART' }
   | { type: 'LOAD_CART'; payload: CartItem[] }
+  | { type: 'SET_LOADING'; payload: boolean }
 
 interface CartContextType extends CartState {
   addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void
@@ -40,6 +43,8 @@ interface CartContextType extends CartState {
   toggleCart: () => void
   openCart: () => void
   closeCart: () => void
+  syncWithDatabase: () => Promise<void>
+  isLoading: boolean
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -160,6 +165,12 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       }
     }
 
+    case 'SET_LOADING':
+      return {
+        ...state,
+        isLoading: action.payload
+      }
+
     default:
       return state
   }
@@ -169,48 +180,254 @@ const initialState: CartState = {
   items: [],
   totalItems: 0,
   totalAmount: 0,
-  isOpen: false
+  isOpen: false,
+  isLoading: false
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState)
+  const { user, loading: authLoading } = useAuth()
+  const [databaseAvailable, setDatabaseAvailable] = React.useState(true)
 
-  // Load cart from localStorage on mount
-  useEffect(() => {
+  // API helper functions
+  const fetchCartFromDatabase = async (): Promise<CartItem[]> => {
     try {
-      const savedCart = localStorage.getItem('hoopmetrix-cart')
-      if (savedCart) {
-        const cartItems = JSON.parse(savedCart)
-        dispatch({ type: 'LOAD_CART', payload: cartItems })
+      const response = await fetch('/api/cart')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.warn('Cart API response not ok:', response.status, errorData)
+        
+        // If it's unauthorized or table doesn't exist, return empty array
+        if (response.status === 401 || response.status === 500) {
+          console.warn('Database operations may not be available, falling back to localStorage only')
+          setDatabaseAvailable(false)
+          return []
+        }
+        
+        throw new Error(`Failed to fetch cart: ${response.status}`)
       }
+      const data = await response.json()
+      return data.items || []
     } catch (error) {
-      console.error('Error loading cart from localStorage:', error)
+      console.error('Error fetching cart from database:', error)
+      return []
     }
-  }, [])
+  }
 
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
+  const syncCartToDatabase = async (items: CartItem[]) => {
     try {
-      localStorage.setItem('hoopmetrix-cart', JSON.stringify(state.items))
+      const response = await fetch('/api/cart/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ localCartItems: items })
+      })
+      if (!response.ok) throw new Error('Failed to sync cart')
+      const data = await response.json()
+      return data.items || []
     } catch (error) {
-      console.error('Error saving cart to localStorage:', error)
+      console.error('Error syncing cart to database:', error)
+      return items
     }
-  }, [state.items])
+  }
 
-  const addItem = (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
+  const addItemToDatabase = async (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
+    try {
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: item.id,
+          quantity: item.quantity || 1,
+          selectedSize: item.selectedSize,
+          selectedColor: item.selectedColor
+        })
+      })
+      if (!response.ok) {
+        console.warn('Failed to add item to cart in database:', response.status)
+        return false
+      }
+      return true
+    } catch (error) {
+      console.error('Error adding item to database:', error)
+      return false
+    }
+  }
+
+  const updateItemInDatabase = async (id: string, quantity: number, selectedSize?: string, selectedColor?: string) => {
+    try {
+      const response = await fetch('/api/cart', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: id,
+          quantity,
+          selectedSize,
+          selectedColor
+        })
+      })
+      if (!response.ok) throw new Error('Failed to update item in cart')
+      return true
+    } catch (error) {
+      console.error('Error updating item in database:', error)
+      return false
+    }
+  }
+
+  const removeItemFromDatabase = async (id: string, selectedSize?: string, selectedColor?: string) => {
+    try {
+      const params = new URLSearchParams({ productId: id })
+      if (selectedSize) params.append('selectedSize', selectedSize)
+      if (selectedColor) params.append('selectedColor', selectedColor)
+      
+      const response = await fetch(`/api/cart?${params}`, {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error('Failed to remove item from cart')
+      return true
+    } catch (error) {
+      console.error('Error removing item from database:', error)
+      return false
+    }
+  }
+
+  const clearCartInDatabase = async () => {
+    try {
+      const response = await fetch('/api/cart/clear', {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error('Failed to clear cart')
+      return true
+    } catch (error) {
+      console.error('Error clearing cart in database:', error)
+      return false
+    }
+  }
+
+  // Load cart on mount and handle auth state changes
+  useEffect(() => {
+    const loadCart = async () => {
+      if (authLoading) return
+
+      dispatch({ type: 'SET_LOADING', payload: true })
+
+      try {
+        if (user && databaseAvailable) {
+          // User is logged in and database is available, fetch from database
+          const localCart = JSON.parse(localStorage.getItem('hoopmetrix-cart') || '[]')
+          
+          if (localCart.length > 0) {
+            // Sync local cart with database
+            const mergedCart = await syncCartToDatabase(localCart)
+            dispatch({ type: 'LOAD_CART', payload: mergedCart })
+            // Clear localStorage since we now have it in database
+            localStorage.removeItem('hoopmetrix-cart')
+          } else {
+            // Just fetch from database
+            const databaseCart = await fetchCartFromDatabase()
+            dispatch({ type: 'LOAD_CART', payload: databaseCart })
+          }
+        } else {
+          // User is not logged in or database not available, use localStorage
+          const savedCart = localStorage.getItem('hoopmetrix-cart')
+          if (savedCart) {
+            const cartItems = JSON.parse(savedCart)
+            dispatch({ type: 'LOAD_CART', payload: cartItems })
+          }
+        }
+      } catch (error) {
+        console.error('Error loading cart:', error)
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false })
+      }
+    }
+
+    loadCart()
+  }, [user, authLoading])
+
+  // Save cart to localStorage for non-authenticated users or when database is not available
+  useEffect(() => {
+    if ((!user || !databaseAvailable) && !authLoading && state.items.length > 0) {
+      try {
+        localStorage.setItem('hoopmetrix-cart', JSON.stringify(state.items))
+      } catch (error) {
+        console.error('Error saving cart to localStorage:', error)
+      }
+    }
+  }, [state.items, user, authLoading, databaseAvailable])
+
+  const addItem = async (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
+    // Optimistically update UI
     dispatch({ type: 'ADD_ITEM', payload: item })
+
+    // If user is logged in and database is available, sync with database
+    if (user && databaseAvailable) {
+      const success = await addItemToDatabase(item)
+      if (!success) {
+        console.warn('Failed to sync add operation with database, continuing with localStorage only')
+        setDatabaseAvailable(false)
+      }
+    }
   }
 
-  const removeItem = (id: string) => {
+  const removeItem = async (id: string) => {
+    // Find the item to get its details for database removal
+    const itemKey = id
+    const item = state.items.find(item => createCartItemKey(item) === itemKey)
+    
+    // Optimistically update UI
     dispatch({ type: 'REMOVE_ITEM', payload: id })
+
+    // If user is logged in and database is available, sync with database
+    if (user && databaseAvailable && item) {
+      const success = await removeItemFromDatabase(item.id, item.selectedSize, item.selectedColor)
+      if (!success) {
+        console.warn('Failed to sync remove operation with database')
+      }
+    }
   }
 
-  const updateQuantity = (id: string, quantity: number) => {
+  const updateQuantity = async (id: string, quantity: number) => {
+    // Find the item to get its details for database update
+    const itemKey = id
+    const item = state.items.find(item => createCartItemKey(item) === itemKey)
+    
+    // Optimistically update UI
     dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } })
+
+    // If user is logged in and database is available, sync with database
+    if (user && databaseAvailable && item) {
+      const success = await updateItemInDatabase(item.id, quantity, item.selectedSize, item.selectedColor)
+      if (!success) {
+        console.warn('Failed to sync update operation with database')
+      }
+    }
   }
 
-  const clearCart = () => {
+  const clearCart = async () => {
+    // Optimistically update UI
     dispatch({ type: 'CLEAR_CART' })
+
+    // If user is logged in and database is available, sync with database
+    if (user && databaseAvailable) {
+      const success = await clearCartInDatabase()
+      if (!success) {
+        console.warn('Failed to sync clear operation with database')
+      }
+    }
+  }
+
+  const syncWithDatabase = async () => {
+    if (!user) return
+
+    dispatch({ type: 'SET_LOADING', payload: true })
+    try {
+      const databaseCart = await fetchCartFromDatabase()
+      dispatch({ type: 'LOAD_CART', payload: databaseCart })
+    } catch (error) {
+      console.error('Error syncing with database:', error)
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false })
+    }
   }
 
   const toggleCart = () => {
@@ -234,7 +451,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       clearCart,
       toggleCart,
       openCart,
-      closeCart
+      closeCart,
+      syncWithDatabase
     }}>
       {children}
     </CartContext.Provider>

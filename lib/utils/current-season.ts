@@ -71,7 +71,7 @@ export function testSeasonCalculation(testDate: Date) {
       if (args.length === 0) {
         super(testDate)
       } else {
-        super(...args)
+        super(...(args as ConstructorParameters<typeof Date>))
       }
     }
     static now() {

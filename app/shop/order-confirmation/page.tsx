@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import Navigation from '@/components/layout/navigation'
 
 interface OrderItem {
   id: string
@@ -158,7 +157,6 @@ function OrderConfirmationContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      <Navigation />
       
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-4xl">

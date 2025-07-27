@@ -28,8 +28,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import Navigation from '@/components/layout/navigation'
-import Footer from '@/components/layout/footer'
 import ProductManager from '@/components/admin/product-manager'
 import UserManager from '@/components/admin/user-manager'
 import OrderManager from '@/components/admin/order-manager'
@@ -192,7 +190,6 @@ function AdminDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navigation />
         <div className="pt-32 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-kentucky-blue-600 mx-auto mb-4"></div>
@@ -206,7 +203,6 @@ function AdminDashboard() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navigation />
         <div className="pt-32 flex items-center justify-center">
           <div className="text-center">
             <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
@@ -226,7 +222,6 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
       
       <div className="pt-24 pb-8">
         <div className="container mx-auto px-4">
@@ -640,7 +635,6 @@ function AdminDashboard() {
         </div>
       </div>
       
-      <Footer />
     </div>
   )
 }

@@ -22,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import PlayerHeadshotUpload from '@/components/admin/player-headshot-upload'
 
 interface Player {
   id: string
@@ -76,7 +77,7 @@ const PlayerManager: React.FC<PlayerManagerProps> = ({ onRefresh }) => {
   const [formData, setFormData] = useState({
     name: '',
     team_id: '',
-    league: 'NBA',
+    league: 'Custom',
     position: '',
     jersey_number: '',
     height: '',
@@ -190,7 +191,7 @@ const PlayerManager: React.FC<PlayerManagerProps> = ({ onRefresh }) => {
     setFormData({
       name: '',
       team_id: '',
-      league: 'NBA',
+      league: 'Custom',
       position: '',
       jersey_number: '',
       height: '',
@@ -329,15 +330,13 @@ const PlayerManager: React.FC<PlayerManagerProps> = ({ onRefresh }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="league">League *</Label>
-                  <Select value={formData.league} onValueChange={(value) => setFormData(prev => ({ ...prev, league: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="NBA">NBA</SelectItem>
-                      <SelectItem value="WNBA">WNBA</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="league"
+                    value="Custom"
+                    readOnly
+                    className="bg-gray-50 text-gray-600"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Custom players are automatically assigned to the Custom league</p>
                 </div>
                 <div>
                   <Label htmlFor="position">Position</Label>
@@ -403,13 +402,10 @@ const PlayerManager: React.FC<PlayerManagerProps> = ({ onRefresh }) => {
 
               {/* Media */}
               <div>
-                <Label htmlFor="photo_url">Photo URL</Label>
-                <Input
-                  id="photo_url"
+                <PlayerHeadshotUpload
                   value={formData.photo_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, photo_url: e.target.value }))}
-                  placeholder="https://example.com/player.jpg"
-                  type="url"
+                  onChange={(value) => setFormData(prev => ({ ...prev, photo_url: value }))}
+                  playerId={editingPlayer?.id || 'new-player'}
                 />
               </div>
 
@@ -475,8 +471,7 @@ const PlayerManager: React.FC<PlayerManagerProps> = ({ onRefresh }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Custom Players</SelectItem>
-            <SelectItem value="NBA">Custom NBA</SelectItem>
-            <SelectItem value="WNBA">Custom WNBA</SelectItem>
+            <SelectItem value="Custom">Custom League</SelectItem>
           </SelectContent>
         </Select>
         <Select value={teamFilter} onValueChange={setTeamFilter}>
