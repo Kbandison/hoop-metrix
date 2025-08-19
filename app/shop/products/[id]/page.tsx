@@ -43,89 +43,7 @@ interface Review {
   verified: boolean
 }
 
-const MOCK_PRODUCT: Product = {
-  id: '1',
-  name: 'Lakers #23 LeBron James Jersey',
-  description: 'Official NBA Swingman Jersey featuring LeBron James',
-  longDescription: 'Experience the pinnacle of basketball fashion with this authentic NBA Swingman Jersey featuring LeBron James. Crafted with premium materials and official team colors, this jersey represents the perfect blend of style, comfort, and team pride. Whether you\'re at the game or watching from home, show your support for one of the greatest players of all time.',
-  price: 119.99,
-  originalPrice: 139.99,
-  category: 'Jerseys',
-  team: 'Lakers',
-  league: 'NBA',
-  images: [
-    '/placeholder-jersey-1.jpg',
-    '/placeholder-jersey-2.jpg',
-    '/placeholder-jersey-3.jpg',
-    '/placeholder-jersey-4.jpg'
-  ],
-  inStock: true,
-  rating: 4.8,
-  reviewCount: 234,
-  sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-  colors: ['Purple', 'Gold', 'White'],
-  featured: true,
-  specifications: {
-    'Brand': 'Nike',
-    'Material': '100% Polyester',
-    'Fit': 'Swingman',
-    'Care': 'Machine Wash Cold',
-    'Country': 'Made in Thailand',
-    'Style': 'Replica Jersey'
-  },
-  shippingInfo: 'Free shipping on orders over $75. Standard delivery 3-5 business days.'
-}
-
-const MOCK_REVIEWS: Review[] = [
-  {
-    id: '1',
-    user: 'Mike Johnson',
-    rating: 5,
-    comment: 'Amazing quality jersey! The fit is perfect and the colors are vibrant. Definitely worth the money.',
-    date: '2024-01-15',
-    verified: true
-  },
-  {
-    id: '2',
-    user: 'Sarah Davis',
-    rating: 4,
-    comment: 'Great jersey, but sizing runs a bit large. Order one size down from your usual.',
-    date: '2024-01-10',
-    verified: true
-  },
-  {
-    id: '3',
-    user: 'Alex Thompson',
-    rating: 5,
-    comment: 'Fast shipping and excellent quality. My son loves wearing this to Lakers games!',
-    date: '2024-01-08',
-    verified: false
-  }
-]
-
-const RELATED_PRODUCTS = [
-  {
-    id: '2',
-    name: 'Lakers #8 Kobe Bryant Jersey',
-    price: 129.99,
-    image: '/placeholder-kobe-jersey.jpg',
-    rating: 4.9
-  },
-  {
-    id: '3',
-    name: 'Lakers Championship Hat',
-    price: 34.99,
-    image: '/placeholder-lakers-hat.jpg',
-    rating: 4.6
-  },
-  {
-    id: '4',
-    name: 'Lakers Team Hoodie',
-    price: 79.99,
-    image: '/placeholder-lakers-hoodie.jpg',
-    rating: 4.7
-  }
-]
+// No mock data - all data fetched from database
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
@@ -140,12 +58,61 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const { addItem, openCart } = useCart()
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setProduct(MOCK_PRODUCT)
-      setReviews(MOCK_REVIEWS)
-      setLoading(false)
-    }, 1000)
+    // Fetch real product data from API
+    const fetchProduct = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch product details
+        const response = await fetch(`/api/products/${resolvedParams.id}`)
+        if (!response.ok) {
+          throw new Error('Product not found')
+        }
+        
+        const data = await response.json()
+        if (data.product) {
+          // Transform database product to component format
+          const transformedProduct: Product = {
+            id: data.product.id,
+            name: data.product.name,
+            description: data.product.description,
+            price: data.product.price,
+            originalPrice: data.product.original_price,
+            category: data.product.category,
+            team: data.product.team_name || data.product.team_id,
+            league: data.product.league,
+            images: [data.product.image_url, ...(data.product.additional_images || [])].filter(Boolean),
+            inStock: data.product.stock_quantity > 0,
+            rating: data.product.rating || 0,
+            reviewCount: data.product.review_count || 0,
+            sizes: data.product.sizes || [],
+            colors: data.product.colors || [],
+            featured: data.product.featured || false,
+            longDescription: data.product.description || '',
+            specifications: {
+              'Category': data.product.category,
+              'Subcategory': data.product.subcategory || '',
+              'League': data.product.league || '',
+              'Stock': data.product.stock_quantity?.toString() || '0'
+            },
+            shippingInfo: 'Free shipping on orders over $75. Standard delivery 3-5 business days.'
+          }
+          setProduct(transformedProduct)
+        }
+        
+        // For now, set empty reviews until review system is implemented
+        setReviews([])
+        
+      } catch (error) {
+        console.error('Error fetching product:', error)
+        setProduct(null)
+        setReviews([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchProduct()
   }, [resolvedParams.id])
 
   const addToCart = () => {
@@ -558,7 +525,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         >
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Products</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {RELATED_PRODUCTS.map((relatedProduct) => (
+            {/* Related products will be implemented with real data later */}
+            {[].map((relatedProduct: any) => (
               <Link key={relatedProduct.id} href={`/shop/products/${relatedProduct.id}`}>
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                   <CardContent className="p-0">

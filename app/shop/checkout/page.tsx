@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -14,6 +14,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useCart, createCartItemKey } from '@/lib/contexts/cart-context'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { getClientStripeConfig } from '@/lib/stripe/config'
+
+const stripeConfig = getClientStripeConfig()
+console.log('Client Stripe Config - Mode:', stripeConfig.mode)
+console.log('Client Stripe Config - Publishable key prefix:', stripeConfig.publishableKey?.substring(0, 12))
+const stripePromise = loadStripe(stripeConfig.publishableKey)
 
 interface FormData {
   email: string
@@ -93,7 +101,173 @@ const shippingMethods = [
   }
 ]
 
-export default function CheckoutPage() {
+function PaymentForm({ formData, finalTotal, shippingCost, tax, onPaymentSuccess }: {
+  formData: FormData
+  finalTotal: number
+  shippingCost: number
+  tax: number
+  onPaymentSuccess: (paymentIntentId: string) => void
+}) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const { items } = useCart()
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
+
+  const handlePayment = async () => {
+    if (!stripe || !elements) return
+
+    setIsProcessing(true)
+    setPaymentError(null)
+
+    const cardElement = elements.getElement(CardElement)
+    if (!cardElement) return
+
+    try {
+      console.log('Payment Form - Starting payment process')
+      console.log('Payment Form - Client config mode:', stripeConfig.mode)
+      console.log('Payment Form - Using publishable key prefix:', stripeConfig.publishableKey?.substring(0, 12))
+      
+      // Create payment intent
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map(item => ({
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image,
+            size: item.selectedSize,
+            color: item.selectedColor
+          })),
+          customer_details: {
+            name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            phone: formData.phone,
+          },
+          shipping_address: {
+            name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            phone: formData.phone,
+            address1: formData.address1,
+            address2: formData.address2,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zipCode,
+            country: formData.country,
+          },
+          shipping_cost: shippingCost,
+          tax_amount: tax,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Payment Form - Failed to create payment intent:', errorData)
+        throw new Error(errorData.error || 'Failed to create payment intent')
+      }
+
+      const { clientSecret, paymentIntentId } = await response.json()
+      console.log('Payment Form - Payment intent created:', paymentIntentId)
+      console.log('Payment Form - Client secret received:', clientSecret?.substring(0, 20) + '...')
+
+      // Confirm payment
+      console.log('Payment Form - Confirming payment with Stripe')
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            address: {
+              line1: formData.address1,
+              line2: formData.address2,
+              city: formData.city,
+              state: formData.state,
+              postal_code: formData.zipCode,
+              country: formData.country,
+            },
+          },
+        },
+      })
+
+      console.log('Payment Form - Stripe confirmation result:', { error: error?.message, paymentIntent: paymentIntent?.id })
+
+      if (error) {
+        setPaymentError(error.message || 'Payment failed')
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        onPaymentSuccess(paymentIntent.id)
+      }
+    } catch (error) {
+      setPaymentError('An error occurred while processing payment')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {stripeConfig.isSandboxMode && (
+        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-yellow-600 font-medium">🏖️ Sandbox Mode</span>
+            <span className="text-yellow-700 text-sm">
+              Use card: 4242 4242 4242 4242, any future date, any CVC
+            </span>
+          </div>
+        </div>
+      )}
+      
+      <div className="p-4 bg-gray-50 rounded-lg">
+        <Label className="block text-sm font-medium text-gray-900 mb-2">
+          Card Information
+        </Label>
+        <CardElement
+          options={{
+            style: {
+              base: {
+                fontSize: '16px',
+                color: '#424770',
+                '::placeholder': {
+                  color: '#aab7c4',
+                },
+              },
+            },
+          }}
+        />
+      </div>
+      
+      {paymentError && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-red-600 text-sm">{paymentError}</p>
+        </div>
+      )}
+
+      <Button
+        type="button"
+        size="lg"
+        className="w-full bg-kentucky-blue-600 hover:bg-kentucky-blue-700"
+        disabled={!stripe || isProcessing}
+        onClick={handlePayment}
+      >
+        {isProcessing ? (
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            Processing Payment...
+          </div>
+        ) : (
+          <>
+            <Shield className="mr-2 w-4 h-4" />
+            Pay ${finalTotal.toFixed(2)}
+          </>
+        )}
+      </Button>
+    </div>
+  )
+}
+
+function CheckoutForm() {
   const { items, totalItems, totalAmount, clearCart } = useCart()
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [errors, setErrors] = useState<Partial<FormData>>({})
@@ -145,20 +319,15 @@ export default function CheckoutPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handlePaymentSuccess = (paymentIntentId: string) => {
+    // Clear cart and redirect to success page with payment intent ID
+    clearCart()
+    window.location.href = `/shop/order-confirmation?payment_intent=${paymentIntentId}`
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!validateForm()) return
-    
-    setIsSubmitting(true)
-    
-    // Simulate API call
-    setTimeout(() => {
-      // TODO: Implement order submission to database
-      // Clear cart and redirect to success page
-      clearCart()
-      window.location.href = '/shop/order-confirmation'
-    }, 2000)
+    // Form validation will be handled by the PaymentForm component
   }
 
   if (items.length === 0) {
@@ -325,11 +494,57 @@ export default function CheckoutPage() {
                           <SelectValue placeholder="Select state" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="AL">Alabama</SelectItem>
+                          <SelectItem value="AK">Alaska</SelectItem>
+                          <SelectItem value="AZ">Arizona</SelectItem>
+                          <SelectItem value="AR">Arkansas</SelectItem>
                           <SelectItem value="CA">California</SelectItem>
-                          <SelectItem value="NY">New York</SelectItem>
-                          <SelectItem value="TX">Texas</SelectItem>
+                          <SelectItem value="CO">Colorado</SelectItem>
+                          <SelectItem value="CT">Connecticut</SelectItem>
+                          <SelectItem value="DE">Delaware</SelectItem>
                           <SelectItem value="FL">Florida</SelectItem>
-                          {/* Add more states as needed */}
+                          <SelectItem value="GA">Georgia</SelectItem>
+                          <SelectItem value="HI">Hawaii</SelectItem>
+                          <SelectItem value="ID">Idaho</SelectItem>
+                          <SelectItem value="IL">Illinois</SelectItem>
+                          <SelectItem value="IN">Indiana</SelectItem>
+                          <SelectItem value="IA">Iowa</SelectItem>
+                          <SelectItem value="KS">Kansas</SelectItem>
+                          <SelectItem value="KY">Kentucky</SelectItem>
+                          <SelectItem value="LA">Louisiana</SelectItem>
+                          <SelectItem value="ME">Maine</SelectItem>
+                          <SelectItem value="MD">Maryland</SelectItem>
+                          <SelectItem value="MA">Massachusetts</SelectItem>
+                          <SelectItem value="MI">Michigan</SelectItem>
+                          <SelectItem value="MN">Minnesota</SelectItem>
+                          <SelectItem value="MS">Mississippi</SelectItem>
+                          <SelectItem value="MO">Missouri</SelectItem>
+                          <SelectItem value="MT">Montana</SelectItem>
+                          <SelectItem value="NE">Nebraska</SelectItem>
+                          <SelectItem value="NV">Nevada</SelectItem>
+                          <SelectItem value="NH">New Hampshire</SelectItem>
+                          <SelectItem value="NJ">New Jersey</SelectItem>
+                          <SelectItem value="NM">New Mexico</SelectItem>
+                          <SelectItem value="NY">New York</SelectItem>
+                          <SelectItem value="NC">North Carolina</SelectItem>
+                          <SelectItem value="ND">North Dakota</SelectItem>
+                          <SelectItem value="OH">Ohio</SelectItem>
+                          <SelectItem value="OK">Oklahoma</SelectItem>
+                          <SelectItem value="OR">Oregon</SelectItem>
+                          <SelectItem value="PA">Pennsylvania</SelectItem>
+                          <SelectItem value="RI">Rhode Island</SelectItem>
+                          <SelectItem value="SC">South Carolina</SelectItem>
+                          <SelectItem value="SD">South Dakota</SelectItem>
+                          <SelectItem value="TN">Tennessee</SelectItem>
+                          <SelectItem value="TX">Texas</SelectItem>
+                          <SelectItem value="UT">Utah</SelectItem>
+                          <SelectItem value="VT">Vermont</SelectItem>
+                          <SelectItem value="VA">Virginia</SelectItem>
+                          <SelectItem value="WA">Washington</SelectItem>
+                          <SelectItem value="WV">West Virginia</SelectItem>
+                          <SelectItem value="WI">Wisconsin</SelectItem>
+                          <SelectItem value="WY">Wyoming</SelectItem>
+                          <SelectItem value="DC">District of Columbia</SelectItem>
                         </SelectContent>
                       </Select>
                       {errors.state && <p className="text-red-500 text-sm mt-1">{errors.state}</p>}
@@ -433,55 +648,13 @@ export default function CheckoutPage() {
                   </RadioGroup>
 
                   {formData.paymentMethod === 'card' && (
-                    <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <Label htmlFor="cardNumber">Card Number *</Label>
-                        <Input
-                          id="cardNumber"
-                          placeholder="1234 5678 9012 3456"
-                          value={formData.cardNumber}
-                          onChange={(e) => handleInputChange('cardNumber', e.target.value)}
-                          className={errors.cardNumber ? 'border-red-500' : ''}
-                        />
-                        {errors.cardNumber && <p className="text-red-500 text-sm mt-1">{errors.cardNumber}</p>}
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="expiryDate">Expiry Date *</Label>
-                          <Input
-                            id="expiryDate"
-                            placeholder="MM/YY"
-                            value={formData.expiryDate}
-                            onChange={(e) => handleInputChange('expiryDate', e.target.value)}
-                            className={errors.expiryDate ? 'border-red-500' : ''}
-                          />
-                          {errors.expiryDate && <p className="text-red-500 text-sm mt-1">{errors.expiryDate}</p>}
-                        </div>
-                        <div>
-                          <Label htmlFor="cvv">CVV *</Label>
-                          <Input
-                            id="cvv"
-                            placeholder="123"
-                            value={formData.cvv}
-                            onChange={(e) => handleInputChange('cvv', e.target.value)}
-                            className={errors.cvv ? 'border-red-500' : ''}
-                          />
-                          {errors.cvv && <p className="text-red-500 text-sm mt-1">{errors.cvv}</p>}
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="nameOnCard">Name on Card *</Label>
-                        <Input
-                          id="nameOnCard"
-                          value={formData.nameOnCard}
-                          onChange={(e) => handleInputChange('nameOnCard', e.target.value)}
-                          className={errors.nameOnCard ? 'border-red-500' : ''}
-                        />
-                        {errors.nameOnCard && <p className="text-red-500 text-sm mt-1">{errors.nameOnCard}</p>}
-                      </div>
-                    </div>
+                    <PaymentForm
+                      formData={formData}
+                      finalTotal={finalTotal}
+                      shippingCost={shippingCost}
+                      tax={tax}
+                      onPaymentSuccess={handlePaymentSuccess}
+                    />
                   )}
 
                   <div className="flex items-center space-x-2">
@@ -502,12 +675,12 @@ export default function CheckoutPage() {
             <div className="lg:col-span-1">
               <Card className="sticky top-32">
                 <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
+                  <CardTitle className="text-gray-900">Order Summary</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 text-gray-900">
+                <CardContent className="space-y-4">
                   {/* Items */}
                   <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {items.map((item) => {
+                    {items.map((item, index) => {
                       const itemKey = createCartItemKey(item)
                       return (
                         <div key={itemKey} className="flex items-center gap-3 p-2 border rounded">
@@ -534,14 +707,14 @@ export default function CheckoutPage() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-sm line-clamp-1">{item.name}</h4>
-                            <div className="flex items-center gap-1 text-xs text-gray-700">
+                            <h4 className="font-medium text-sm line-clamp-1 text-gray-900">{item.name}</h4>
+                            <div className="flex items-center gap-1 text-xs text-gray-600">
                               <span>Qty: {item.quantity}</span>
                               {item.selectedSize && <span>• {item.selectedSize}</span>}
                               {item.selectedColor && <span>• {item.selectedColor}</span>}
                             </div>
                           </div>
-                          <div className="font-medium text-sm">
+                          <div className="font-medium text-sm text-gray-900">
                             ${(item.price * item.quantity).toFixed(2)}
                           </div>
                         </div>
@@ -551,11 +724,11 @@ export default function CheckoutPage() {
 
                   {/* Order Breakdown */}
                   <div className="space-y-2 py-4 border-t">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm text-gray-900">
                       <span>Subtotal</span>
                       <span>${totalAmount.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm text-gray-900">
                       <span>Shipping</span>
                       <span>
                         {shippingCost === 0 ? (
@@ -565,37 +738,18 @@ export default function CheckoutPage() {
                         )}
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm text-gray-900">
                       <span>Tax</span>
                       <span>${tax.toFixed(2)}</span>
                     </div>
                   </div>
 
                   {/* Total */}
-                  <div className="flex justify-between text-lg font-bold pt-4 border-t">
+                  <div className="flex justify-between text-lg font-bold pt-4 border-t text-gray-900">
                     <span>Total</span>
                     <span>${finalTotal.toFixed(2)}</span>
                   </div>
 
-                  {/* Place Order Button */}
-                  <Button
-                    type="submit"
-                    size="lg"
-                    className="w-full bg-kentucky-blue-600 hover:bg-kentucky-blue-700"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Processing...
-                      </div>
-                    ) : (
-                      <>
-                        <Shield className="mr-2 w-4 h-4" />
-                        Place Order
-                      </>
-                    )}
-                  </Button>
 
                   {/* Security Info */}
                   <div className="text-center pt-4 border-t">
@@ -617,5 +771,13 @@ export default function CheckoutPage() {
         </form>
       </div>
     </motion.div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Elements stripe={stripePromise}>
+      <CheckoutForm />
+    </Elements>
   )
 }

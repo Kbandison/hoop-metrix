@@ -65,46 +65,11 @@ export async function GET(request: NextRequest) {
         }
       })
     } catch (supabaseError) {
-      // Database unavailable, using fallback data
-      
-      // Fallback to mock data
-      const { MOCK_PRODUCTS } = await import('@/lib/services/products')
-      
-      let filteredProducts = MOCK_PRODUCTS.filter(product => {
-        if (!product.is_active) return false
-        
-        if (category && category !== 'All' && product.category !== category) return false
-        
-        if (search) {
-          const searchTerm = search.toLowerCase()
-          const searchable = [
-            product.name,
-            product.description,
-            product.category,
-            ...(product.tags || [])
-          ].join(' ').toLowerCase()
-          
-          if (!searchable.includes(searchTerm)) return false
-        }
-        
-        return true
-      })
-
-      // Pagination
-      const total = filteredProducts.length
-      const totalPages = Math.ceil(total / limit)
-      const offset = (page - 1) * limit
-      const products = filteredProducts.slice(offset, offset + limit)
-      
-      return NextResponse.json({
-        products,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages
-        }
-      })
+      console.error('Failed to connect to database:', supabaseError)
+      return NextResponse.json(
+        { error: 'Database connection failed. Please try again later.' },
+        { status: 503 }
+      )
     }
 
   } catch (error) {

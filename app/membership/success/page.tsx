@@ -132,7 +132,7 @@ function SuccessContent() {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="border-white/30 text-white hover:bg-white/10 px-8 py-3"
+                  className="border-white/50 text-white hover:bg-white/20 hover:text-white px-8 py-3 bg-white/10"
                 >
                   Manage Account
                 </Button>
@@ -142,15 +142,15 @@ function SuccessContent() {
             {/* Session Details (if available) */}
             {sessionData && (
               <motion.div
-                className="mt-8 p-4 bg-slate-800/30 rounded-lg border border-slate-700"
+                className="mt-8 p-4 bg-slate-800/60 rounded-lg border border-slate-600"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.2 }}
               >
-                <p className="text-gray-400 text-sm">
+                <p className="text-gray-200 text-sm">
                   Order ID: {sessionData.payment_intent || sessionId}
                 </p>
-                <p className="text-gray-400 text-sm mt-1">
+                <p className="text-gray-200 text-sm mt-1">
                   A confirmation email has been sent to your email address.
                 </p>
               </motion.div>

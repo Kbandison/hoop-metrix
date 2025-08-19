@@ -39,7 +39,10 @@ export default function CartSidebar() {
   }
 
   const handleRemoveItem = (itemId: string) => {
+    console.log('Cart Sidebar - handleRemoveItem called with itemId:', itemId)
+    console.log('Cart Sidebar - About to call removeItem from context')
     removeItem(itemId)
+    console.log('Cart Sidebar - removeItem call completed')
   }
 
   return (
@@ -99,8 +102,9 @@ export default function CartSidebar() {
                   </motion.div>
                 ) : (
                   <div className="space-y-4">
-                    {items.map((item) => {
+                    {items.map((item, index) => {
                       const itemKey = createCartItemKey(item)
+                      console.log('Cart Sidebar - Rendering item:', item.name, 'with itemKey:', itemKey)
                       return (
                         <motion.div
                           key={itemKey}
@@ -175,7 +179,11 @@ export default function CartSidebar() {
                                 variant="ghost"
                                 size="sm"
                                 className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => handleRemoveItem(itemKey)}
+                                onClick={() => {
+                                  console.log('Cart Sidebar - Delete button clicked for itemKey:', itemKey)
+                                  console.log('Cart Sidebar - Item details:', item.name, item.id, item.selectedSize, item.selectedColor)
+                                  handleRemoveItem(itemKey)
+                                }}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>

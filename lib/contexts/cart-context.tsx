@@ -14,6 +14,7 @@ export interface CartItem {
   selectedColor?: string
   quantity: number
   inStock: boolean
+  uniqueId?: string
 }
 
 interface CartState {
@@ -59,16 +60,27 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case 'ADD_ITEM': {
       const newItem = { ...action.payload, quantity: action.payload.quantity || 1 }
+      
+      console.log('Adding item:', newItem) // Debug log
+      console.log('Current items:', state.items.map(item => ({ 
+        id: item.id, 
+        selectedSize: item.selectedSize, 
+        selectedColor: item.selectedColor 
+      }))) // Debug log
+      
       const existingItemIndex = state.items.findIndex(
         item => item.id === newItem.id && 
                 item.selectedSize === newItem.selectedSize && 
                 item.selectedColor === newItem.selectedColor
       )
 
+      console.log('Existing item index:', existingItemIndex) // Debug log
+
       let updatedItems: CartItem[]
 
       if (existingItemIndex >= 0) {
         // Update existing item quantity
+        console.log('Updating existing item quantity') // Debug log
         updatedItems = state.items.map((item, index) => 
           index === existingItemIndex 
             ? { ...item, quantity: item.quantity + newItem.quantity }
@@ -76,6 +88,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         )
       } else {
         // Add new item
+        console.log('Adding new item') // Debug log
         updatedItems = [...state.items, newItem as CartItem]
       }
 
@@ -356,34 +369,56 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [state.items, user, authLoading, databaseAvailable])
 
   const addItem = async (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
-    // Optimistically update UI
-    dispatch({ type: 'ADD_ITEM', payload: item })
-
-    // If user is logged in and database is available, sync with database
+    console.log('Cart Context - Adding item:', item.name, 'quantity:', item.quantity || 1)
+    
+    // If user is logged in and database is available, sync with database first
     if (user && databaseAvailable) {
+      console.log('Cart Context - User logged in, syncing with database')
       const success = await addItemToDatabase(item)
-      if (!success) {
-        console.warn('Failed to sync add operation with database, continuing with localStorage only')
+      if (success) {
+        console.log('Cart Context - Database add successful, syncing cart')
+        // If database operation succeeded, reload cart from database to ensure consistency
+        await syncWithDatabase()
+        console.log('Cart Context - Cart synced from database')
+        return
+      } else {
+        console.warn('Failed to sync add operation with database, falling back to localStorage only')
         setDatabaseAvailable(false)
       }
     }
+
+    // Fallback: optimistically update UI for localStorage-only mode
+    console.log('Cart Context - Using localStorage fallback')
+    dispatch({ type: 'ADD_ITEM', payload: item })
   }
 
   const removeItem = async (id: string) => {
+    console.log('Cart Context - Removing item with ID:', id)
+    
     // Find the item to get its details for database removal
     const itemKey = id
     const item = state.items.find(item => createCartItemKey(item) === itemKey)
+    console.log('Cart Context - Found item to remove:', item?.name)
     
-    // Optimistically update UI
-    dispatch({ type: 'REMOVE_ITEM', payload: id })
-
-    // If user is logged in and database is available, sync with database
+    // If user is logged in and database is available, sync with database first
     if (user && databaseAvailable && item) {
+      console.log('Cart Context - User logged in, removing from database')
       const success = await removeItemFromDatabase(item.id, item.selectedSize, item.selectedColor)
-      if (!success) {
-        console.warn('Failed to sync remove operation with database')
+      if (success) {
+        console.log('Cart Context - Database remove successful, syncing cart')
+        // If database operation succeeded, reload cart from database to ensure consistency
+        await syncWithDatabase()
+        console.log('Cart Context - Cart synced after removal')
+        return
+      } else {
+        console.warn('Failed to sync remove operation with database, falling back to localStorage only')
+        setDatabaseAvailable(false)
       }
     }
+
+    // Fallback: optimistically update UI for localStorage-only mode
+    console.log('Cart Context - Using localStorage fallback for removal')
+    dispatch({ type: 'REMOVE_ITEM', payload: id })
   }
 
   const updateQuantity = async (id: string, quantity: number) => {
@@ -391,29 +426,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const itemKey = id
     const item = state.items.find(item => createCartItemKey(item) === itemKey)
     
-    // Optimistically update UI
-    dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } })
-
-    // If user is logged in and database is available, sync with database
+    // If user is logged in and database is available, sync with database first
     if (user && databaseAvailable && item) {
       const success = await updateItemInDatabase(item.id, quantity, item.selectedSize, item.selectedColor)
-      if (!success) {
-        console.warn('Failed to sync update operation with database')
+      if (success) {
+        // If database operation succeeded, reload cart from database to ensure consistency
+        await syncWithDatabase()
+        return
+      } else {
+        console.warn('Failed to sync update operation with database, falling back to localStorage only')
+        setDatabaseAvailable(false)
       }
     }
+
+    // Fallback: optimistically update UI for localStorage-only mode
+    dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } })
   }
 
   const clearCart = async () => {
-    // Optimistically update UI
-    dispatch({ type: 'CLEAR_CART' })
-
-    // If user is logged in and database is available, sync with database
+    // If user is logged in and database is available, sync with database first
     if (user && databaseAvailable) {
       const success = await clearCartInDatabase()
-      if (!success) {
-        console.warn('Failed to sync clear operation with database')
+      if (success) {
+        // If database operation succeeded, reload cart from database to ensure consistency
+        await syncWithDatabase()
+        return
+      } else {
+        console.warn('Failed to sync clear operation with database, falling back to localStorage only')
+        setDatabaseAvailable(false)
       }
     }
+
+    // Fallback: optimistically update UI for localStorage-only mode
+    dispatch({ type: 'CLEAR_CART' })
   }
 
   const syncWithDatabase = async () => {
@@ -468,6 +513,6 @@ export function useCart() {
 }
 
 // Helper function to create unique item keys
-export const createCartItemKey = (item: Pick<CartItem, 'id' | 'selectedSize' | 'selectedColor'>) => {
-  return `${item.id}-${item.selectedSize || ''}-${item.selectedColor || ''}`
+export const createCartItemKey = (item: Pick<CartItem, 'id' | 'selectedSize' | 'selectedColor'> & { uniqueId?: string }) => {
+  return item.uniqueId || `${item.id}-${item.selectedSize || ''}-${item.selectedColor || ''}`
 }

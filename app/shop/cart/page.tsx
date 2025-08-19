@@ -89,7 +89,7 @@ export default function CartPage() {
                   </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {items.map((item) => {
+                  {items.map((item, index) => {
                     const itemKey = createCartItemKey(item)
                     return (
                       <motion.div

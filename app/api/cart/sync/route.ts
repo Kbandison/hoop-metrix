@@ -41,20 +41,13 @@ export async function POST(request: NextRequest) {
       )
 
       if (existingItem) {
-        // Update existing item with higher quantity
-        const updateData = {
-          id: existingItem.id,
-          user_id: user.id,
-          product_id: localItem.id,
-          quantity: Math.max(existingItem.quantity, localItem.quantity),
-          selected_size: localItem.selectedSize || null,
-          selected_color: localItem.selectedColor || null
-        }
+        // Update existing item by adding quantities together
+        const newQuantity = existingItem.quantity + localItem.quantity
         
         // Update existing item separately to avoid upsert conflicts
         const { error: updateError } = await supabase
           .from('user_carts')
-          .update({ quantity: updateData.quantity })
+          .update({ quantity: newQuantity })
           .eq('id', existingItem.id)
           
         if (updateError) {

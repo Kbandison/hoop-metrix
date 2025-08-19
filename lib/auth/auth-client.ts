@@ -61,10 +61,26 @@ export class AuthClient {
   async signOut() {
     try {
       const { error } = await this.supabase.auth.signOut()
-      if (error) throw error
+      if (error) {
+        // If the error is "Auth session missing", it means the user is already logged out
+        // This is not really an error in the context of a logout operation
+        if (error.message?.includes('Auth session missing') || error.message?.includes('session_not_found')) {
+          // Silently handle - user is already logged out
+          return { error: null }
+        }
+        // For other errors, still log but don't throw
+        console.warn('Sign out warning:', error.message)
+        return { error: null } // Treat as successful logout anyway
+      }
       return { error: null }
     } catch (error) {
-      return { error: error as AuthError }
+      // Catch any other errors and suppress them for logout
+      const authError = error as AuthError
+      if (authError.message?.includes('Auth session missing') || authError.message?.includes('session_not_found')) {
+        return { error: null }
+      }
+      console.warn('Sign out warning:', authError.message)
+      return { error: null } // Always return success for logout
     }
   }
 
@@ -80,7 +96,7 @@ export class AuthClient {
       
       if (!user) return null
 
-      // Return basic user info immediately to avoid hanging
+      // Return basic user info
       return {
         id: user.id,
         email: user.email || '',

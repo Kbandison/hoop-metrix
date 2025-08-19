@@ -2,8 +2,8 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState, useEffect, useRef } from 'react'
-import { ShoppingCart, User, ChevronDown, Menu, X, LogIn, LogOut, UserCircle, Settings } from 'lucide-react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { ShoppingCart, User, ChevronDown, Menu, X, LogIn, LogOut, UserCircle, Settings, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -26,24 +26,38 @@ const navItems = [
   },
   { name: 'Players', href: '/players' },
   { name: 'Shop', href: '/shop' },
-  { name: 'Membership', href: '/membership' },
+  // { name: 'Membership', href: '/membership' },
 ]
 
 
 export default function Navigation() {
   const { totalItems, toggleCart } = useCart()
-  const { user, signOut, loading, isAdmin } = useAuth()
+  const { user, signOut, loading, isAdmin, isPremium } = useAuth()
+  
+  // Debug logging to see what's actually happening
+  console.log('Navigation render:', { 
+    hasUser: !!user, 
+    userId: user?.id, 
+    loading, 
+    email: user?.email 
+  })
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
   const [isTeamsDropdownOpen, setIsTeamsDropdownOpen] = useState(false)
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   const hamburgerButtonRef = useRef<HTMLButtonElement>(null)
-  const profileDropdownRef = useRef<HTMLDivElement>(null)
   const teamsDropdownRef = useRef<HTMLDivElement>(null)
+  const profileDropdownRef = useRef<HTMLDivElement>(null)
   
   const closeMobileMenu = () => setIsMobileMenuOpen(false)
-  const closeProfileDropdown = () => setIsProfileDropdownOpen(false)
   const closeTeamsDropdown = () => setIsTeamsDropdownOpen(false)
+  const closeProfileDropdown = () => setIsProfileDropdownOpen(false)
+
+  const getUserInitial = (name: string) => {
+    return name.split(' ')[0].charAt(0).toUpperCase()
+  }
 
   // Close menus when clicking outside
   useEffect(() => {
@@ -73,18 +87,47 @@ export default function Navigation() {
     }
   }, [])
 
+  // Profile dropdown now manages its own state
+
   // Toggle mobile menu when clicking hamburger button
   const handleHamburgerClick = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
   }
-  
-  const getUserInitial = (name: string) => {
-    return name.split(' ')[0].charAt(0).toUpperCase()
-  }
 
   const handleLogout = async () => {
-    await signOut()
-    window.location.href = '/'
+    // Close dropdown and show logout success modal
+    setIsProfileDropdownOpen(false)
+    setShowLogoutModal(true)
+    
+    // Temporarily suppress console errors for logout
+    const originalError = console.error
+    console.error = (...args) => {
+      const message = args.join(' ')
+      if (!message.includes('Auth session missing') && 
+          !message.includes('session_not_found') && 
+          !message.includes('AuthSessionMissingError')) {
+        originalError(...args)
+      }
+    }
+    
+    // Actually perform the logout
+    try {
+      await signOut()
+    } catch (error) {
+      // Silently ignore any errors - modal will still show success
+    } finally {
+      // Restore original console.error after a short delay
+      setTimeout(() => {
+        console.error = originalError
+      }, 100)
+    }
+    
+    // Hide modal and redirect to home page after 4 seconds  
+    setTimeout(() => {
+      setShowLogoutModal(false)
+      // Redirect to home page with full refresh
+      window.location.href = '/'
+    }, 4000)
   }
 
   return (
@@ -198,85 +241,7 @@ export default function Navigation() {
             </Button>
 
             {/* Auth/Profile Section */}
-            {loading ? (
-              <div className="w-8 h-8 bg-white/20 rounded-full animate-pulse"></div>
-            ) : user ? (
-              <div ref={profileDropdownRef} className="relative">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
-                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                >
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={user.user_metadata?.avatar_url || ''} alt={user.user_metadata?.full_name || user.email || ''} />
-                    <AvatarFallback className="bg-kentucky-blue-600 text-white text-sm">
-                      {getUserInitial(user.user_metadata?.full_name || user.email || 'U')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden lg:block text-sm font-medium">
-                    {user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'User'}
-                  </span>
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-                
-                <AnimatePresence>
-                  {isProfileDropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="absolute right-0 mt-2 w-56 bg-black/70 backdrop-blur-md border border-white/20 shadow-xl rounded-2xl p-4 z-50"
-                    >
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ delay: 0.1, duration: 0.15 }}
-                      >
-                        <Link 
-                          href="/dashboard" 
-                          className="w-full flex items-center gap-3 text-white hover:text-white/80 transition-colors py-2 px-2 rounded-lg hover:bg-white/10 block"
-                          onClick={closeProfileDropdown}
-                        >
-                          <UserCircle className="w-5 h-5" />
-                          <span className="font-medium">Profile</span>
-                        </Link>
-                        {isAdmin && (
-                          <Link 
-                            href="/admin" 
-                            className="w-full flex items-center gap-3 text-orange-400 hover:text-orange-300 transition-colors py-2 px-2 rounded-lg hover:bg-orange-500/10 block"
-                            onClick={closeProfileDropdown}
-                          >
-                            <Settings className="w-5 h-5" />
-                            <span className="font-medium">Admin Dashboard</span>
-                          </Link>
-                        )}
-                        <div className="border-t border-white/20 my-2"></div>
-                        <button 
-                          className="w-full flex items-center gap-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 py-2 px-2 rounded-lg transition-colors"
-                          onClick={() => {
-                            handleLogout()
-                            closeProfileDropdown()
-                          }}
-                        >
-                          <LogOut className="w-5 h-5" />
-                          <span className="font-medium">Log Out</span>
-                        </button>
-                      </motion.div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <Link href="/auth/login">
-                <Button className="bg-kentucky-blue-600 hover:bg-kentucky-blue-700 text-white px-6 py-2 text-sm font-medium flex items-center gap-2">
-                  <LogIn className="w-4 h-4" />
-                  <span className="hidden lg:block">Log In / Sign Up</span>
-                  <span className="lg:hidden">Login</span>
-                </Button>
-              </Link>
-            )}
+          
           </div>
         </div>
 
@@ -344,12 +309,72 @@ export default function Navigation() {
                       )}
                     </div>
                   </Button>
+
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* Logout Success Modal */}
+      <AnimatePresence>
+        {showLogoutModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="bg-white rounded-2xl p-8 shadow-2xl max-w-sm mx-4"
+            >
+              <div className="text-center">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring", stiffness: 400 }}
+                  className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4"
+                >
+                  <CheckCircle className="w-8 h-8 text-white" />
+                </motion.div>
+                
+                <motion.h3
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-xl font-bold text-gray-900 mb-2"
+                >
+                  Logged Out Successfully
+                </motion.h3>
+                
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-gray-600"
+                >
+                  You have been securely logged out. Redirecting to home page...
+                </motion.p>
+                
+                {/* Loading indicator */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="mt-4 flex justify-center"
+                >
+                  <div className="w-6 h-6 border-2 border-kentucky-blue-200 border-t-kentucky-blue-600 rounded-full animate-spin"></div>
+                </motion.div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   )
 }

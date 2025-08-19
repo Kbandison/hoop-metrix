@@ -3,11 +3,20 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { Check, Star, Crown, Zap, Users, TrendingUp, Lock, ArrowRight, Gift } from 'lucide-react'
+import { Check, Star, Crown, Zap, Users, TrendingUp, Lock, ArrowRight, Gift, Shield, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useAuth } from '@/lib/auth/auth-context'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { getClientStripeConfig } from '@/lib/stripe/config'
+
+const stripeConfig = getClientStripeConfig()
+const stripePromise = loadStripe(stripeConfig.publishableKey)
 
 interface Plan {
   id: string
@@ -126,6 +135,384 @@ const FEATURES_COMPARISON = [
   { feature: 'Priority Support', free: false, premium: true }
 ]
 
+// Subscription Payment Form Component
+function SubscriptionPaymentForm({ 
+  plan, 
+  billingCycle, 
+  onSuccess, 
+  onCancel 
+}: {
+  plan: Plan
+  billingCycle: 'monthly' | 'yearly'
+  onSuccess: () => void
+  onCancel: () => void
+}) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const { user, refreshUser } = useAuth()
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
+  const [needsAccount, setNeedsAccount] = useState(false)
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false)
+  
+  // Auto-fill form data for authenticated users, empty for guests
+  const [formData, setFormData] = useState({
+    name: user?.user_metadata?.full_name || '',
+    email: user?.email || '',
+    password: '', // Only needed for guest signup
+    confirmPassword: '' // Only needed for guest signup
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Validation
+    if (!stripe || !elements || !formData.name || !formData.email) {
+      setPaymentError('Please fill in all required fields')
+      return
+    }
+
+    // For guest users, validate password fields
+    if (!user && (!formData.password || formData.password !== formData.confirmPassword)) {
+      if (!formData.password) {
+        setPaymentError('Password is required to create an account')
+        return
+      }
+      if (formData.password !== formData.confirmPassword) {
+        setPaymentError('Passwords do not match')
+        return
+      }
+      if (formData.password.length < 6) {
+        setPaymentError('Password must be at least 6 characters')
+        return
+      }
+    }
+
+    setIsProcessing(true)
+    setPaymentError(null)
+
+    const cardElement = elements.getElement(CardElement)
+    if (!cardElement) {
+      setPaymentError('Card element not found')
+      setIsProcessing(false)
+      return
+    }
+
+    try {
+      // If user is not authenticated, create account first
+      if (!user) {
+        setIsCreatingAccount(true)
+        const signupResponse = await fetch('/api/auth/signup-with-subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            full_name: formData.name,
+            planId: plan.id,
+            billingCycle
+          })
+        })
+
+        const signupResult = await signupResponse.json()
+        if (!signupResponse.ok) {
+          throw new Error(signupResult.error || 'Failed to create account')
+        }
+
+        // Account created successfully, continue with payment setup
+        setIsCreatingAccount(false)
+      }
+
+      // Create subscription setup intent
+      const setupResponse = await fetch('/api/create-subscription-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId: plan.id,
+          billingCycle,
+          customer_details: {
+            name: formData.name,
+            email: formData.email
+          }
+        })
+      })
+
+      if (!setupResponse.ok) {
+        const errorData = await setupResponse.json()
+        throw new Error(errorData.error || 'Failed to create subscription setup')
+      }
+
+      const { clientSecret, customerId, setupIntentId } = await setupResponse.json()
+
+      // Confirm setup intent with payment method
+      const { error, setupIntent } = await stripe.confirmCardSetup(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: formData.name,
+            email: formData.email
+          }
+        }
+      })
+
+      if (error) {
+        setPaymentError(error.message || 'Payment setup failed')
+        return
+      }
+
+      if (setupIntent && setupIntent.status === 'succeeded') {
+        // Confirm subscription with timeout
+        console.log('Calling confirm-subscription API...')
+        const confirmResponse = await fetch('/api/confirm-subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            setupIntentId: setupIntent.id,
+            customerId,
+            planId: plan.id,
+            billingCycle
+          })
+        })
+
+        console.log('Confirm subscription response status:', confirmResponse.status)
+
+        if (!confirmResponse.ok) {
+          const errorData = await confirmResponse.json()
+          console.error('Confirm subscription error:', errorData)
+          throw new Error(errorData.error || 'Failed to create subscription')
+        }
+
+        const result = await confirmResponse.json()
+        console.log('Confirm subscription result:', result)
+        
+        if (result.success) {
+          console.log('Subscription confirmed successfully')
+          
+          // If this was a guest signup, sign them in automatically
+          if (!user && formData.email && formData.password) {
+            try {
+              console.log('Attempting to sign in guest user...')
+              const signinResponse = await fetch('/api/auth/signin-after-signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  email: formData.email,
+                  password: formData.password
+                })
+              })
+              
+              if (signinResponse.ok) {
+                console.log('User signed in successfully after subscription')
+                // Give a moment for auth state to update
+                setTimeout(() => {
+                  onSuccess()
+                }, 1000)
+              } else {
+                console.log('Could not sign in user automatically, but subscription succeeded')
+                onSuccess()
+              }
+            } catch (signinError) {
+              console.log('Could not sign in user automatically, but subscription succeeded')
+              onSuccess()
+            }
+          } else {
+            console.log('User was already logged in, proceeding to success')
+            onSuccess()
+          }
+        } else {
+          throw new Error('Subscription confirmation failed')
+        }
+      }
+    } catch (error) {
+      console.error('Subscription error:', error)
+      setPaymentError(error instanceof Error ? error.message : 'An error occurred')
+      setIsCreatingAccount(false)
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900">
+              {user ? `Subscribe to ${plan.name}` : `Create Account & Subscribe`}
+            </h3>
+            {!user && (
+              <p className="text-sm text-gray-600 mt-1">
+                You'll create an account and subscribe in one step
+              </p>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onCancel}
+            className="h-8 w-8 p-0"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between">
+            <span className="font-medium text-gray-900">{plan.name}</span>
+            <span className="font-bold text-gray-900">
+              ${plan.price.toFixed(2)}/{plan.interval}
+            </span>
+          </div>
+          {user && (
+            <div className="mt-2 text-sm text-gray-600">
+              Subscribing as: {user.email}
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="name">Full Name *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              disabled={user ? true : false} // Disable if user is logged in (auto-filled)
+              className="mt-1"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="email">Email Address *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+              disabled={user ? true : false} // Disable if user is logged in (auto-filled)
+              className="mt-1"
+            />
+          </div>
+
+          {/* Password fields only for non-authenticated users */}
+          {!user && (
+            <>
+              <div>
+                <Label htmlFor="password">Password *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                  className="mt-1"
+                  placeholder="Minimum 6 characters"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  required
+                  className="mt-1"
+                  placeholder="Re-enter your password"
+                />
+              </div>
+
+              <div className="text-center py-2">
+                <p className="text-sm text-gray-600">
+                  Already have an account?{' '}
+                  <Link 
+                    href="/auth/login" 
+                    className="text-kentucky-blue-600 hover:text-kentucky-blue-700 font-medium"
+                  >
+                    Sign in instead
+                  </Link>
+                </p>
+              </div>
+            </>
+          )}
+
+          <div>
+            <Label>Card Information *</Label>
+            <div className="mt-1 p-3 border rounded-md bg-white">
+              <CardElement
+                options={{
+                  style: {
+                    base: {
+                      fontSize: '16px',
+                      color: '#424770',
+                      '::placeholder': {
+                        color: '#aab7c4',
+                      },
+                    },
+                  },
+                }}
+              />
+            </div>
+          </div>
+
+          {stripeConfig.isSandboxMode && (
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-yellow-600 font-medium text-sm">🏖️ Test Mode</span>
+                <span className="text-yellow-700 text-xs">
+                  Use card: 4242 4242 4242 4242
+                </span>
+              </div>
+            </div>
+          )}
+
+          {paymentError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-600 text-sm">{paymentError}</p>
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              className="flex-1"
+              disabled={isProcessing}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1 bg-kentucky-blue-600 hover:bg-kentucky-blue-700"
+              disabled={!stripe || isProcessing}
+            >
+              {isProcessing ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  {isCreatingAccount ? 'Creating Account...' : 'Processing Payment...'}
+                </div>
+              ) : (
+                <>
+                  <Shield className="mr-2 w-4 h-4" />
+                  {user ? `Subscribe ${plan.price.toFixed(2)}` : `Create Account & Subscribe ${plan.price.toFixed(2)}`}
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  )
+}
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -150,44 +537,41 @@ const cardVariants = {
   }
 }
 
-export default function MembershipPage() {
+function MembershipPageContent() {
+  const { user, loading, refreshUser } = useAuth()
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
-  const [selectedPlan, setSelectedPlan] = useState<string>('premium')
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
+  const [showPaymentForm, setShowPaymentForm] = useState(false)
 
   const currentPlans = billingCycle === 'monthly' ? MONTHLY_PLANS : YEARLY_PLANS
 
-  const handlePlanSelect = async (planId: string) => {
+  const handlePlanSelect = (planId: string) => {
     if (planId === 'free') {
-      // Handle free plan signup - redirect to registration
-      window.location.href = '/auth/signup'
+      // Handle free plan signup - redirect to registration if not logged in
+      if (!user) {
+        window.location.href = '/auth/signup'
+      } else {
+        // User is already logged in with free plan
+        alert('You already have free access!')
+      }
       return
     }
 
     setSelectedPlan(planId)
-    
-    try {
-      // Create Stripe checkout session
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          planId,
-          billingCycle,
-        }),
-      })
-
-      const { url } = await response.json()
-      
-      if (url) {
-        window.location.href = url
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error)
-      alert('Something went wrong. Please try again.')
-    }
+    setShowPaymentForm(true)
   }
+
+  const handlePaymentSuccess = () => {
+    // Database is now updated correctly, redirect immediately
+    window.location.href = '/membership/success'
+  }
+
+  const handlePaymentCancel = () => {
+    setShowPaymentForm(false)
+    setSelectedPlan(null)
+  }
+
+  const selectedPlanData = currentPlans.find(plan => plan.id === selectedPlan)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -567,6 +951,24 @@ export default function MembershipPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Payment Form Modal */}
+      {showPaymentForm && selectedPlanData && (
+        <SubscriptionPaymentForm
+          plan={selectedPlanData}
+          billingCycle={billingCycle}
+          onSuccess={handlePaymentSuccess}
+          onCancel={handlePaymentCancel}
+        />
+      )}
     </div>
+  )
+}
+
+export default function MembershipPage() {
+  return (
+    <Elements stripe={stripePromise}>
+      <MembershipPageContent />
+    </Elements>
   )
 }

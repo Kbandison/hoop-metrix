@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle, Package, Truck, Calendar, Download, Share2, ArrowLeft, ShoppingBag } from 'lucide-react'
+import { CheckCircle, Package, Truck, ArrowLeft, ShoppingBag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -44,49 +44,6 @@ interface OrderDetails {
   estimatedDelivery: string
 }
 
-// Mock order data - in real app this would come from API/database
-const MOCK_ORDER: OrderDetails = {
-  orderId: 'HM-2024-001234',
-  status: 'confirmed',
-  items: [
-    {
-      id: '1',
-      name: 'Lakers #23 LeBron James Jersey',
-      price: 119.99,
-      quantity: 1,
-      image: '/placeholder-jersey.jpg',
-      category: 'Jerseys'
-    },
-    {
-      id: '2',
-      name: 'NBA Logo Hoodie',
-      price: 69.99,
-      quantity: 2,
-      image: '/placeholder-hoodie.jpg',
-      category: 'Apparel'
-    }
-  ],
-  subtotal: 259.97,
-  shipping: 9.99,
-  tax: 23.40,
-  total: 293.36,
-  customerInfo: {
-    name: 'John Smith',
-    email: 'john.smith@email.com',
-    phone: '+1 (555) 123-4567'
-  },
-  shippingAddress: {
-    street: '123 Basketball Lane',
-    city: 'Los Angeles',
-    state: 'CA',
-    zipCode: '90210',
-    country: 'United States'
-  },
-  paymentMethod: '**** **** **** 1234',
-  orderDate: new Date().toLocaleDateString(),
-  estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()
-}
-
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -108,15 +65,118 @@ const itemVariants = {
 
 function OrderConfirmationContent() {
   const searchParams = useSearchParams()
-  const [order, setOrder] = useState<OrderDetails>(MOCK_ORDER)
-  const [isShared, setIsShared] = useState(false)
+  const [order, setOrder] = useState<OrderDetails | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // In real app, fetch order details using order ID from searchParams
+  // Fetch order details using payment intent ID or session ID
   useEffect(() => {
-    const orderId = searchParams.get('order')
-    if (orderId) {
-      // Fetch order details from API
-      // TODO: Implement order fetching from database
+    const paymentIntent = searchParams.get('payment_intent')
+    const sessionId = searchParams.get('session_id')
+    
+    console.log('=== ORDER CONFIRMATION DEBUG ===')
+    console.log('Current URL:', window.location.href)
+    console.log('Search params:', searchParams.toString())
+    console.log('Payment intent from URL:', paymentIntent)
+    console.log('Session ID from URL:', sessionId)
+    console.log('================================')
+    
+    if (paymentIntent) {
+      // Direct payment intent - ensure order exists first, then fetch it
+      setLoading(true)
+      console.log(`Ensuring order exists for payment intent: ${paymentIntent}`)
+      
+      // First, try to create/ensure the order exists
+      fetch('/api/order/create-from-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ payment_intent_id: paymentIntent })
+      })
+      .then(res => res.json())
+      .then(createData => {
+        console.log('Order Confirmation - Create order response:', createData)
+        
+        // Now fetch the order details regardless of create result
+        return fetch(`/api/order/${paymentIntent}`)
+      })
+      .then(res => {
+        console.log('Order Confirmation - Fetch order response status:', res.status)
+        return res.json()
+      })
+      .then(data => {
+        console.log('Order Confirmation - Order data:', data)
+        if (data.success && data.order) {
+          console.log('Order Confirmation - SUCCESS! Setting real order data:', data.order.orderId)
+          setOrder(data.order)
+          setError(null)
+        } else {
+          console.error('Order Confirmation - Failed to load order:', data.error)
+          setError(`Order not found: ${data.details || data.error}`)
+          setOrder(null)
+        }
+        setLoading(false)
+      })
+      .catch(error => {
+        console.error('Order Confirmation - Error in order processing:', error.message)
+        setError(`Order processing error: ${error.message}`)
+        setOrder(null)
+        setLoading(false)
+      })
+    } else if (sessionId) {
+      // We have session ID - need to get payment intent from Stripe session first
+      setLoading(true)
+      console.log(`Getting payment intent from session: ${sessionId}`)
+      
+      fetch(`/api/session/${sessionId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.payment_intent) {
+            console.log('Session resolved to payment intent:', data.payment_intent)
+            
+            // First ensure the order exists for this payment intent
+            return fetch('/api/order/create-from-payment-intent', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ payment_intent_id: data.payment_intent })
+            })
+            .then(res => res.json())
+            .then(createData => {
+              console.log('Order Confirmation - Create order response:', createData)
+              // Now fetch the order using the payment intent
+              return fetch(`/api/order/${data.payment_intent}`)
+            })
+          } else {
+            throw new Error(data.error || 'Failed to resolve session')
+          }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.order) {
+            console.log('Order Confirmation - SUCCESS! Setting real order data:', data.order.orderId)
+            setOrder(data.order)
+            setError(null)
+          } else {
+            console.error('Order Confirmation - Failed to load order:', data.error)
+            setError(`Order not found: ${data.details || data.error}`)
+            setOrder(null)
+          }
+          setLoading(false)
+        })
+        .catch(error => {
+          console.error('Order Confirmation - Error processing session:', error.message)
+          setError(`Session processing error: ${error.message}`)
+          setOrder(null)
+          setLoading(false)
+        })
+    } else {
+      console.error('Order Confirmation - No payment intent or session ID found in URL')
+      setError('No payment intent or session ID provided in URL')
+      setOrder(null)
+      setLoading(false)
     }
   }, [searchParams])
 
@@ -135,28 +195,86 @@ function OrderConfirmationContent() {
     }
   }
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'HoopMetrix Order Confirmation',
-          text: `Order ${order.orderId} confirmed! Total: $${order.total}`,
-          url: window.location.href
-        })
-        setIsShared(true)
-      } catch (error) {
-        // Error in sharing functionality
-      }
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href)
-      setIsShared(true)
-      setTimeout(() => setIsShared(false), 2000)
-    }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-kentucky-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Confirming your order...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !order) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+        <div className="pt-24 pb-16">
+          <div className="container mx-auto px-4 max-w-2xl">
+            <div className="text-center">
+              <div className="bg-red-100 rounded-full p-4 mb-6 inline-block">
+                <svg className="w-16 h-16 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Order Not Found
+              </h1>
+              
+              <p className="text-lg text-gray-600 mb-6">
+                We couldn't find your order details.
+              </p>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8 text-left">
+                <h3 className="font-semibold text-red-800 mb-2">Error Details:</h3>
+                <p className="text-red-700 text-sm font-mono break-all">
+                  {error || 'Unknown error occurred'}
+                </p>
+                {searchParams.get('payment_intent') && (
+                  <p className="text-red-700 text-sm mt-2">
+                    <span className="font-semibold text-red-800">Payment Intent:</span> {searchParams.get('payment_intent')}
+                  </p>
+                )}
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-gray-600">
+                  This could happen if:
+                </p>
+                <ul className="text-left text-gray-600 space-y-2 max-w-md mx-auto">
+                  <li>• The order hasn't been processed yet</li>
+                  <li>• There was an issue with payment processing</li>
+                  <li>• The order link is invalid or expired</li>
+                </ul>
+              </div>
+              
+              <div className="mt-8 space-x-4">
+                <Link href="/shop">
+                  <Button className="bg-gradient-to-r from-kentucky-blue-600 to-kentucky-blue-700 hover:from-kentucky-blue-700 hover:to-kentucky-blue-800">
+                    Back to Shop
+                  </Button>
+                </Link>
+                <Link href="/account">
+                  <Button variant="outline">
+                    View My Account
+                  </Button>
+                </Link>
+              </div>
+              
+              <p className="text-sm text-gray-500 mt-8">
+                If you need help, please contact support with the error details above.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white pt-24">
       
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-4xl">
@@ -186,7 +304,7 @@ function OrderConfirmationContent() {
                 Thank you for your purchase, {order.customerInfo.name}
               </p>
               <p className="text-gray-500">
-                Order #{order.orderId} • Placed on {order.orderDate}
+                Placed on {order.orderDate}
               </p>
             </motion.div>
 
@@ -195,7 +313,7 @@ function OrderConfirmationContent() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-gray-900">
                       <Package className="w-5 h-5" />
                       Order Status
                     </CardTitle>
@@ -212,7 +330,7 @@ function OrderConfirmationContent() {
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">Order Placed</p>
-                        <p className="text-sm text-gray-500">{order.orderDate}</p>
+                        <p className="text-sm text-gray-800">{order.orderDate}</p>
                       </div>
                     </div>
                     
@@ -222,7 +340,7 @@ function OrderConfirmationContent() {
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">Processing</p>
-                        <p className="text-sm text-gray-500">1-2 business days</p>
+                        <p className="text-sm text-gray-800">1-2 business days</p>
                       </div>
                     </div>
                     
@@ -232,7 +350,7 @@ function OrderConfirmationContent() {
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">Estimated Delivery</p>
-                        <p className="text-sm text-gray-500">{order.estimatedDelivery}</p>
+                        <p className="text-sm text-gray-800">{order.estimatedDelivery}</p>
                       </div>
                     </div>
                   </div>
@@ -244,7 +362,7 @@ function OrderConfirmationContent() {
             <motion.div variants={itemVariants}>
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
                     <ShoppingBag className="w-5 h-5" />
                     Order Items ({order.items.length})
                   </CardTitle>
@@ -259,14 +377,24 @@ function OrderConfirmationContent() {
                         transition={{ delay: 0.5 + index * 0.1 }}
                         className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg"
                       >
-                        <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <Package className="w-8 h-8 text-gray-400" />
+                        <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden">
+                          {item.image ? (
+                            <img 
+                              src={item.image} 
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="w-8 h-8 text-gray-400" />
+                            </div>
+                          )}
                         </div>
                         
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                          <p className="text-sm text-gray-500">{item.category}</p>
-                          <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                          <p className="text-sm text-gray-700">{item.category}</p>
+                          <p className="text-sm text-gray-800">Qty: {item.quantity}</p>
                         </div>
                         
                         <div className="text-right">
@@ -274,7 +402,7 @@ function OrderConfirmationContent() {
                             ${(item.price * item.quantity).toFixed(2)}
                           </p>
                           {item.quantity > 1 && (
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-700">
                               ${item.price.toFixed(2)} each
                             </p>
                           )}
@@ -291,25 +419,25 @@ function OrderConfirmationContent() {
               <motion.div variants={itemVariants}>
                 <Card>
                   <CardHeader>
-                    <CardTitle>Order Summary</CardTitle>
+                    <CardTitle className="text-gray-900">Order Summary</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Subtotal</span>
-                      <span className="font-medium">${order.subtotal.toFixed(2)}</span>
+                      <span className="text-gray-800">Subtotal</span>
+                      <span className="font-medium text-gray-900">${order.subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Shipping</span>
-                      <span className="font-medium">${order.shipping.toFixed(2)}</span>
+                      <span className="text-gray-800">Shipping</span>
+                      <span className="font-medium text-gray-900">${order.shipping.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Tax</span>
-                      <span className="font-medium">${order.tax.toFixed(2)}</span>
+                      <span className="text-gray-800">Tax</span>
+                      <span className="font-medium text-gray-900">${order.tax.toFixed(2)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
-                      <span>Total</span>
-                      <span>${order.total.toFixed(2)}</span>
+                      <span className="text-gray-900">Total</span>
+                      <span className="text-gray-900">${order.total.toFixed(2)}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -319,18 +447,18 @@ function OrderConfirmationContent() {
               <motion.div variants={itemVariants}>
                 <Card>
                   <CardHeader>
-                    <CardTitle>Shipping & Payment</CardTitle>
+                    <CardTitle className="text-gray-900">Shipping & Payment</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-2">Shipping Address</h4>
-                      <div className="text-gray-600 text-sm space-y-1">
-                        <p>{order.customerInfo.name}</p>
-                        <p>{order.shippingAddress.street}</p>
-                        <p>
+                      <div className="text-sm space-y-1">
+                        <p className="text-gray-800">{order.customerInfo.name}</p>
+                        <p className="text-gray-800">{order.shippingAddress.street}</p>
+                        <p className="text-gray-800">
                           {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}
                         </p>
-                        <p>{order.shippingAddress.country}</p>
+                        <p className="text-gray-800">{order.shippingAddress.country}</p>
                       </div>
                     </div>
                     
@@ -338,14 +466,14 @@ function OrderConfirmationContent() {
                     
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-2">Payment Method</h4>
-                      <p className="text-gray-600 text-sm">Card ending in {order.paymentMethod}</p>
+                      <p className="text-gray-800 text-sm">Card ending in {order.paymentMethod}</p>
                     </div>
                     
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-2">Contact</h4>
-                      <div className="text-gray-600 text-sm space-y-1">
-                        <p>{order.customerInfo.email}</p>
-                        <p>{order.customerInfo.phone}</p>
+                      <div className="text-sm space-y-1">
+                        <p className="text-gray-800">{order.customerInfo.email}</p>
+                        <p className="text-gray-800">{order.customerInfo.phone}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -355,19 +483,14 @@ function OrderConfirmationContent() {
 
             {/* Actions */}
             <motion.div variants={itemVariants} className="flex flex-wrap gap-4 justify-center">
-              <Button
+              {/* <Button
                 onClick={handleShare}
                 variant="outline"
                 className="flex items-center gap-2"
               >
                 <Share2 className="w-4 h-4" />
                 {isShared ? 'Shared!' : 'Share Order'}
-              </Button>
-              
-              <Button variant="outline" className="flex items-center gap-2">
-                <Download className="w-4 h-4" />
-                Download Invoice
-              </Button>
+              </Button> */}
               
               <Link href="/shop">
                 <Button className="bg-gradient-to-r from-kentucky-blue-600 to-kentucky-blue-700 hover:from-kentucky-blue-700 hover:to-kentucky-blue-800">

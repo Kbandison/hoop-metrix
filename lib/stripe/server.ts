@@ -1,6 +1,11 @@
 import Stripe from 'stripe'
+import { getStripeKeys } from './config'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripeConfig = getStripeKeys()
+if (!stripeConfig.secretKey) {
+  throw new Error('Stripe secret key is not configured')
+}
+export const stripe = new Stripe(stripeConfig.secretKey, {
   typescript: true,
 })
 
@@ -34,9 +39,12 @@ export async function createPaymentIntent(amount: number, currency: string = 'us
 
 // Helper function to verify webhook signature
 export function verifyWebhookSignature(payload: string, signature: string) {
+  if (!stripeConfig.webhookSecret) {
+    throw new Error('Stripe webhook secret is not configured')
+  }
   return stripe.webhooks.constructEvent(
     payload,
     signature,
-    process.env.STRIPE_WEBHOOK_SECRET!
+    stripeConfig.webhookSecret
   )
 }
