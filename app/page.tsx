@@ -266,11 +266,11 @@ export default function Home() {
                 Explore Players
               </Button>
             </Link>
-            {/* <Link href="/membership">
+            <Link href="/membership">
               <Button size="lg" variant="outline" className="border-white bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm px-8 py-6 text-lg font-semibold">
                 Join Premium
               </Button>
-            </Link> */}
+            </Link>
           </div>
           
           <div className="mt-12 grid grid-cols-3 gap-8 max-w-md mx-auto text-center">
@@ -727,9 +727,9 @@ export default function Home() {
                 Exclusive content, advanced stats, and premium features for the ultimate basketball experience.
               </p>
               <Link href="/membership">
-                {/* <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
+                <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
                   Go Premium
-                </Button> */}
+                </Button>
               </Link>
             </Card>
           </div>
@@ -768,9 +768,9 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/membership">
-                {/* <Button size="lg" variant="outline" className="border-white bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm px-8 py-6 text-lg font-semibold">
+                <Button size="lg" variant="outline" className="border-white bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm px-8 py-6 text-lg font-semibold">
                   Join Now
-                </Button> */}
+                </Button>
               </Link>
             </div>
           </div>

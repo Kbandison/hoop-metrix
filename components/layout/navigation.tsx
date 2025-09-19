@@ -26,7 +26,7 @@ const navItems = [
   },
   { name: 'Players', href: '/players' },
   { name: 'Shop', href: '/shop' },
-  // { name: 'Membership', href: '/membership' },
+  { name: 'Membership', href: '/membership' },
 ]
 
 
@@ -241,7 +241,95 @@ export default function Navigation() {
             </Button>
 
             {/* Auth/Profile Section */}
-          
+          {user ? (
+              <div ref={profileDropdownRef} className="relative">
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
+                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                >
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={user?.user_metadata?.avatar_url || ''} alt={user?.user_metadata?.full_name || user?.email || ''} />
+                    <AvatarFallback className="bg-kentucky-blue-600 text-white text-sm">
+                      {getUserInitial(user?.user_metadata?.full_name || user?.email || 'U')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden lg:block text-sm font-medium">
+                    {user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'User'}
+                  </span>
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+                
+                <AnimatePresence mode="wait">
+                  {isProfileDropdownOpen && (
+                    <motion.div
+                      key="profile-dropdown-content"
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="absolute right-0 mt-2 w-56 bg-black/70 backdrop-blur-md border border-white/20 shadow-xl rounded-2xl p-4 z-50"
+                    >
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ delay: 0.1, duration: 0.15 }}
+                      >
+                        {/* User Info Section */}
+                        <div className="px-2 py-3 border-b border-white/20 mb-2">
+                          <div className="text-white font-medium">
+                            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge className={`${isPremium ? 'bg-gradient-to-r from-kentucky-blue-500 to-purple-500' : 'bg-gray-600'} text-white text-xs`}>
+                              {isPremium ? '👑 Premium Member' : '🆓 Free Member'}
+                            </Badge>
+                          </div>
+                        </div>
+                        
+                        <Link 
+                          href="/dashboard" 
+                          className="w-full flex items-center gap-3 text-white hover:text-white/80 transition-colors py-2 px-2 rounded-lg hover:bg-white/10 block"
+                          onClick={closeProfileDropdown}
+                        >
+                          <UserCircle className="w-5 h-5" />
+                          <span className="font-medium">Profile</span>
+                        </Link>
+                        {isAdmin && (
+                          <Link 
+                            href="/admin" 
+                            className="w-full flex items-center gap-3 text-orange-400 hover:text-orange-300 transition-colors py-2 px-2 rounded-lg hover:bg-orange-500/10 block"
+                            onClick={closeProfileDropdown}
+                          >
+                            <Settings className="w-5 h-5" />
+                            <span className="font-medium">Admin Dashboard</span>
+                          </Link>
+                        )}
+                        <div className="border-t border-white/20 my-2"></div>
+                        <button 
+                          className="w-full flex items-center gap-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 py-2 px-2 rounded-lg transition-colors"
+                          onClick={handleLogout}
+                        >
+                          <LogOut className="w-5 h-5" />
+                          <span className="font-medium">Log Out</span>
+                        </button>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : loading ? (
+              <div className="w-8 h-8 bg-white/20 rounded-full animate-pulse"></div>
+            ) : (
+              <Link href="/auth/login">
+                <Button className="bg-kentucky-blue-600 hover:bg-kentucky-blue-700 text-white px-6 py-2 text-sm font-medium flex items-center gap-2">
+                  <LogIn className="w-4 h-4" />
+                  <span className="hidden lg:block">Log In / Sign Up</span>
+                  <span className="lg:hidden">Login</span>
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 

@@ -5,8 +5,10 @@
  */
 
 export const getStripeKeys = () => {
+  // Force sandbox mode if no live keys are available
   const mode = process.env.STRIPE_MODE || 'sandbox'
-  const isSandboxMode = mode === 'sandbox' || mode === 'test' // Support both terms
+  const hasLiveKeys = !!(process.env.STRIPE_LIVE_PUBLISHABLE_KEY && process.env.STRIPE_LIVE_SECRET_KEY)
+  const isSandboxMode = mode === 'sandbox' || mode === 'test' || !hasLiveKeys // Support both terms
 
   const config = {
     publishableKey: isSandboxMode 
@@ -45,7 +47,8 @@ export const getStripeKeys = () => {
 // Client-side configuration (only publishable key)
 export const getClientStripeConfig = () => {
   const mode = process.env.NEXT_PUBLIC_STRIPE_MODE || process.env.STRIPE_MODE || 'sandbox'
-  const isSandboxMode = mode === 'sandbox' || mode === 'test' // Support both terms
+  const hasLiveKeys = !!(process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || process.env.STRIPE_LIVE_PUBLISHABLE_KEY)
+  const isSandboxMode = mode === 'sandbox' || mode === 'test' || !hasLiveKeys // Support both terms
 
   console.log('Client Config - Mode:', mode)
   console.log('Client Config - NEXT_PUBLIC_STRIPE_MODE:', process.env.NEXT_PUBLIC_STRIPE_MODE)

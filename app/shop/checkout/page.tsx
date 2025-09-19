@@ -20,7 +20,9 @@ import { getClientStripeConfig } from '@/lib/stripe/config'
 
 const stripeConfig = getClientStripeConfig()
 console.log('Client Stripe Config - Mode:', stripeConfig.mode)
+console.log('Client Stripe Config - Is Sandbox Mode:', stripeConfig.isSandboxMode)
 console.log('Client Stripe Config - Publishable key prefix:', stripeConfig.publishableKey?.substring(0, 12))
+console.log('Client Stripe Config - Full publishable key:', stripeConfig.publishableKey)
 const stripePromise = loadStripe(stripeConfig.publishableKey)
 
 interface FormData {
@@ -106,7 +108,7 @@ function PaymentForm({ formData, finalTotal, shippingCost, tax, onPaymentSuccess
   finalTotal: number
   shippingCost: number
   tax: number
-  onPaymentSuccess: (paymentIntentId: string) => void
+  onPaymentSuccess: (paymentIntentId: string) => Promise<void>
 }) {
   const stripe = useStripe()
   const elements = useElements()
@@ -127,6 +129,10 @@ function PaymentForm({ formData, finalTotal, shippingCost, tax, onPaymentSuccess
       console.log('Payment Form - Starting payment process')
       console.log('Payment Form - Client config mode:', stripeConfig.mode)
       console.log('Payment Form - Using publishable key prefix:', stripeConfig.publishableKey?.substring(0, 12))
+      console.log('Payment Form - Cart items before mapping:', JSON.stringify(items, null, 2))
+      console.log('Payment Form - Final total:', finalTotal)
+      console.log('Payment Form - Shipping cost:', shippingCost)
+      console.log('Payment Form - Tax:', tax)
       
       // Create payment intent
       const response = await fetch('/api/create-payment-intent', {
@@ -134,6 +140,7 @@ function PaymentForm({ formData, finalTotal, shippingCost, tax, onPaymentSuccess
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: items.map(item => ({
+            id: item.id,
             name: item.name,
             price: item.price,
             quantity: item.quantity,
@@ -197,7 +204,7 @@ function PaymentForm({ formData, finalTotal, shippingCost, tax, onPaymentSuccess
       if (error) {
         setPaymentError(error.message || 'Payment failed')
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        onPaymentSuccess(paymentIntent.id)
+        await onPaymentSuccess(paymentIntent.id)
       }
     } catch (error) {
       setPaymentError('An error occurred while processing payment')
@@ -319,9 +326,11 @@ function CheckoutForm() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handlePaymentSuccess = (paymentIntentId: string) => {
+  const handlePaymentSuccess = async (paymentIntentId: string) => {
     // Clear cart and redirect to success page with payment intent ID
-    clearCart()
+    console.log('Payment successful - clearing cart')
+    await clearCart()
+    console.log('Cart cleared - redirecting to confirmation page')
     window.location.href = `/shop/order-confirmation?payment_intent=${paymentIntentId}`
   }
 

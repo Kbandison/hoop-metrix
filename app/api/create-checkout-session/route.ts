@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
               currency: 'usd',
               product_data: {
                 name: 'HoopMetrix Premium',
-                description: 'Complete basketball encyclopedia access',
+                description: 'Complete basketball database access',
                 images: [`${process.env.NEXT_PUBLIC_APP_URL}/HM_logo_black.png`],
               },
               unit_amount: config.amount,

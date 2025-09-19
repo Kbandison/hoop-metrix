@@ -21,7 +21,7 @@ export default function Footer() {
               <span className="font-bold text-2xl">Hoop Metrix</span>
             </div>
             <p className="text-gray-400 max-w-md mb-6">
-              The ultimate basketball encyclopedia featuring comprehensive player profiles, team statistics, and exclusive merchandise.
+              The ultimate basketball database featuring comprehensive player profiles, team statistics, and exclusive merchandise.
             </p>
             <div className="flex space-x-4">
               <Badge variant="outline" className="border-gray-700 text-gray-300">NBA</Badge>
@@ -36,7 +36,7 @@ export default function Footer() {
               <li><Link href="/players" className="text-gray-400 hover:text-white transition-colors">Players</Link></li>
               <li><Link href="/teams" className="text-gray-400 hover:text-white transition-colors">Teams</Link></li>
               <li><Link href="/shop" className="text-gray-400 hover:text-white transition-colors">Shop</Link></li>
-              {/* <li><Link href="/membership" className="text-gray-400 hover:text-white transition-colors">Membership</Link></li> */}
+              <li><Link href="/membership" className="text-gray-400 hover:text-white transition-colors">Membership</Link></li>
             </ul>
           </div>
 
@@ -50,7 +50,7 @@ export default function Footer() {
             </ul>
             
             {/* Admin Panel Access */}
-            {/* <div className="mt-8 pt-6 border-t border-gray-700">
+            <div className="mt-8 pt-6 border-t border-gray-700">
               <h4 className="text-sm font-semibold mb-3 text-gray-400">Admin Access</h4>
               <Link href="/admin">
                 <Button 
@@ -62,7 +62,7 @@ export default function Footer() {
                   Dashboard
                 </Button>
               </Link>
-            </div> */}
+            </div>
           </div>
         </div>
 

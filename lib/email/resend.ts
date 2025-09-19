@@ -13,7 +13,7 @@ export const emailTemplates = {
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #f97316;">Welcome to HoopMetrix, ${name}!</h1>
-        <p>Thank you for joining the ultimate basketball encyclopedia. You now have access to:</p>
+        <p>Thank you for joining the ultimate basketball database. You now have access to:</p>
         <ul>
           <li>500+ NBA player profiles with stats and photos</li>
           <li>144+ WNBA player profiles with comprehensive data</li>

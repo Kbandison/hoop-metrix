@@ -1,10 +1,10 @@
-# HoopMetrix - Basketball Encyclopedia & E-commerce Platform
+# HoopMetrix - Basketball Database & E-commerce Platform
 
-A comprehensive basketball encyclopedia and e-commerce platform featuring NBA and WNBA players, teams, and merchandise with premium membership functionality.
+A comprehensive basketball database and e-commerce platform featuring NBA and WNBA players, teams, and merchandise with premium membership functionality.
 
 ## 🏀 Features
 
-### **Basketball Encyclopedia**
+### **Basketball Database**
 - **500+ NBA Players** with stats, photos, and detailed profiles
 - **144+ WNBA Players** with comprehensive career information
 - **All NBA/WNBA Teams** with rosters, logos, and team information

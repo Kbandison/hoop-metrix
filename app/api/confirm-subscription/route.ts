@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       if (!product) {
         product = await stripe.products.create({
           name: 'HoopMetrix Premium',
-          description: 'Complete basketball encyclopedia access',
+          description: 'Complete basketball database access',
           active: true,
         })
       }
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       console.error('Error creating/finding product:', error)
       product = await stripe.products.create({
         name: 'HoopMetrix Premium',
-        description: 'Complete basketball encyclopedia access',
+        description: 'Complete basketball database access',
         active: true,
       })
     }

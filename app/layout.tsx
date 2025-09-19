@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HoopMetrix - Basketball Encyclopedia",
+  title: "HoopMetrix - Basketball Database",
   description: "The ultimate basketball hub featuring NBA and WNBA players, teams, statistics, and merchandise.",
 };
 

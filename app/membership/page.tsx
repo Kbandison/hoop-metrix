@@ -55,7 +55,7 @@ const MONTHLY_PLANS: Plan[] = [
     name: 'HoopMetrix Premium',
     price: 10.00,
     interval: 'month',
-    description: 'Complete basketball encyclopedia access',
+    description: 'Complete basketball database access',
     features: [
       'Full access to all player profiles',
       'Complete team information & stats',
@@ -99,7 +99,7 @@ const YEARLY_PLANS: Plan[] = [
     price: 100.00,
     originalPrice: 120.00,
     interval: 'year',
-    description: 'Complete basketball encyclopedia access',
+    description: 'Complete basketball database access',
     features: [
       'Full access to all player profiles',
       'Complete team information & stats',
