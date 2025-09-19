@@ -392,7 +392,12 @@ function CheckoutForm() {
     // Clear cart and redirect to success page with payment intent ID
     console.log('Payment successful - clearing cart')
     await clearCart()
-    console.log('Cart cleared - redirecting to confirmation page')
+    console.log('Cart cleared - waiting before redirect to ensure clearing completes')
+    
+    // Add a small delay to ensure cart clearing completes before redirect
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    console.log('Redirecting to confirmation page')
     window.location.href = `/shop/order-confirmation?payment_intent=${paymentIntentId}`
   }
 

@@ -361,9 +361,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if ((!user || !databaseAvailable) && !authLoading && state.items.length > 0) {
       try {
+        console.log('Cart Context - Saving cart to localStorage:', state.items.length, 'items')
         localStorage.setItem('hoopmetrix-cart', JSON.stringify(state.items))
       } catch (error) {
         console.error('Error saving cart to localStorage:', error)
+      }
+    } else if ((!user || !databaseAvailable) && !authLoading && state.items.length === 0) {
+      // Clear localStorage when cart is empty
+      try {
+        localStorage.removeItem('hoopmetrix-cart')
+        console.log('Cart Context - Removed empty cart from localStorage')
+      } catch (error) {
+        console.error('Error removing cart from localStorage:', error)
       }
     }
   }, [state.items, user, authLoading, databaseAvailable])
@@ -444,21 +453,32 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const clearCart = async () => {
-    // If user is logged in and database is available, sync with database first
+    console.log('Cart Context - Clearing cart')
+    
+    // Always clear the UI immediately for better UX
+    dispatch({ type: 'CLEAR_CART' })
+    
+    // If user is logged in and database is available, also clear database
     if (user && databaseAvailable) {
+      console.log('Cart Context - Clearing database cart')
       const success = await clearCartInDatabase()
-      if (success) {
-        // If database operation succeeded, reload cart from database to ensure consistency
-        await syncWithDatabase()
-        return
-      } else {
-        console.warn('Failed to sync clear operation with database, falling back to localStorage only')
+      if (!success) {
+        console.warn('Failed to clear cart in database, but UI has been cleared')
         setDatabaseAvailable(false)
+      } else {
+        console.log('Cart Context - Database cart cleared successfully')
       }
     }
-
-    // Fallback: optimistically update UI for localStorage-only mode
-    dispatch({ type: 'CLEAR_CART' })
+    
+    // Also clear localStorage to prevent restoration
+    try {
+      localStorage.removeItem('hoopmetrix-cart')
+      console.log('Cart Context - localStorage cart cleared')
+    } catch (error) {
+      console.error('Error clearing localStorage cart:', error)
+    }
+    
+    console.log('Cart Context - Cart clearing completed')
   }
 
   const syncWithDatabase = async () => {
