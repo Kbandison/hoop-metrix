@@ -117,13 +117,8 @@ function PaymentForm({ formData, finalTotal, shippingCost, tax, onPaymentSuccess
   const [paymentError, setPaymentError] = useState<string | null>(null)
 
   const handlePayment = async () => {
-    if (!stripe || !elements) return
-
     setIsProcessing(true)
     setPaymentError(null)
-
-    const cardElement = elements.getElement(CardElement)
-    if (!cardElement) return
 
     try {
       console.log('Payment Form - Starting payment process')
@@ -133,6 +128,60 @@ function PaymentForm({ formData, finalTotal, shippingCost, tax, onPaymentSuccess
       console.log('Payment Form - Final total:', finalTotal)
       console.log('Payment Form - Shipping cost:', shippingCost)
       console.log('Payment Form - Tax:', tax)
+
+      // Check if this is a free order
+      if (finalTotal === 0) {
+        console.log('Payment Form - Processing free order')
+        
+        const response = await fetch('/api/orders/free', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: items.map(item => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+              image: item.image,
+              size: item.selectedSize,
+              color: item.selectedColor
+            })),
+            customer_details: {
+              name: `${formData.firstName} ${formData.lastName}`,
+              email: formData.email,
+              phone: formData.phone,
+            },
+            shipping_address: {
+              name: `${formData.firstName} ${formData.lastName}`,
+              email: formData.email,
+              phone: formData.phone,
+              address1: formData.address1,
+              address2: formData.address2,
+              city: formData.city,
+              state: formData.state,
+              zipCode: formData.zipCode,
+              country: formData.country,
+            }
+          }),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          console.error('Payment Form - Failed to process free order:', errorData)
+          throw new Error(errorData.error || 'Failed to process free order')
+        }
+
+        const { fakePaymentIntentId } = await response.json()
+        console.log('Payment Form - Free order processed successfully')
+        await onPaymentSuccess(fakePaymentIntentId)
+        return
+      }
+
+      // For paid orders, continue with Stripe payment
+      if (!stripe || !elements) return
+
+      const cardElement = elements.getElement(CardElement)
+      if (!cardElement) return
       
       // Create payment intent
       const response = await fetch('/api/create-payment-intent', {
@@ -215,35 +264,48 @@ function PaymentForm({ formData, finalTotal, shippingCost, tax, onPaymentSuccess
 
   return (
     <div className="space-y-4">
-      {stripeConfig.isSandboxMode && (
-        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+      {finalTotal === 0 ? (
+        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center gap-2">
-            <span className="text-yellow-600 font-medium">🏖️ Sandbox Mode</span>
-            <span className="text-yellow-700 text-sm">
-              Use card: 4242 4242 4242 4242, any future date, any CVC
+            <span className="text-green-600 font-medium">🎉 Free Order</span>
+            <span className="text-green-700 text-sm">
+              No payment required for this order
             </span>
           </div>
         </div>
-      )}
-      
-      <div className="p-4 bg-gray-50 rounded-lg">
-        <Label className="block text-sm font-medium text-gray-900 mb-2">
-          Card Information
-        </Label>
-        <CardElement
-          options={{
-            style: {
-              base: {
-                fontSize: '16px',
-                color: '#424770',
-                '::placeholder': {
-                  color: '#aab7c4',
+      ) : (
+        <>
+          {stripeConfig.isSandboxMode && (
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-yellow-600 font-medium">🏖️ Sandbox Mode</span>
+                <span className="text-yellow-700 text-sm">
+                  Use card: 4242 4242 4242 4242, any future date, any CVC
+                </span>
+              </div>
+            </div>
+          )}
+          
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <Label className="block text-sm font-medium text-gray-900 mb-2">
+              Card Information
+            </Label>
+            <CardElement
+              options={{
+                style: {
+                  base: {
+                    fontSize: '16px',
+                    color: '#424770',
+                    '::placeholder': {
+                      color: '#aab7c4',
+                    },
+                  },
                 },
-              },
-            },
-          }}
-        />
-      </div>
+              }}
+            />
+          </div>
+        </>
+      )}
       
       {paymentError && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-md">
@@ -255,18 +317,18 @@ function PaymentForm({ formData, finalTotal, shippingCost, tax, onPaymentSuccess
         type="button"
         size="lg"
         className="w-full bg-kentucky-blue-600 hover:bg-kentucky-blue-700"
-        disabled={!stripe || isProcessing}
+        disabled={(finalTotal > 0 && !stripe) || isProcessing}
         onClick={handlePayment}
       >
         {isProcessing ? (
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            Processing Payment...
+            {finalTotal === 0 ? 'Processing Order...' : 'Processing Payment...'}
           </div>
         ) : (
           <>
             <Shield className="mr-2 w-4 h-4" />
-            Pay ${finalTotal.toFixed(2)}
+            {finalTotal === 0 ? 'Get Free Items' : `Pay $${finalTotal.toFixed(2)}`}
           </>
         )}
       </Button>

@@ -86,7 +86,30 @@ function OrderConfirmationContent() {
       setLoading(true)
       console.log(`Ensuring order exists for payment intent: ${paymentIntent}`)
       
-      // First, try to create/ensure the order exists
+      // Check if this is a free order
+      if (paymentIntent.startsWith('free_order_')) {
+        console.log('Detected free order, using free order API')
+        fetch(`/api/order/free/${paymentIntent}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.order) {
+              console.log('Free order retrieved successfully:', data.order)
+              setOrderDetails(data.order)
+            } else {
+              console.error('Failed to retrieve free order:', data.error)
+              setError('Unable to retrieve order details')
+            }
+            setLoading(false)
+          })
+          .catch(error => {
+            console.error('Error fetching free order:', error)
+            setError('Unable to retrieve order details')
+            setLoading(false)
+          })
+        return
+      }
+      
+      // For regular Stripe payments - try to create/ensure the order exists
       fetch('/api/order/create-from-payment-intent', {
         method: 'POST',
         headers: {
