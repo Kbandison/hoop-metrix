@@ -94,7 +94,7 @@ function OrderConfirmationContent() {
           .then(data => {
             if (data.success && data.order) {
               console.log('Free order retrieved successfully:', data.order)
-              setOrderDetails(data.order)
+              setOrder(data.order)
             } else {
               console.error('Failed to retrieve free order:', data.error)
               setError('Unable to retrieve order details')

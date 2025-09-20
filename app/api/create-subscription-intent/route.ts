@@ -11,16 +11,56 @@ const stripe = new Stripe(stripeConfig.secretKey, {
   apiVersion: '2025-06-30.basil',
 })
 
+// Helper function to get price ID from product ID if needed
+async function getPriceId(identifier: string, billingCycle: string): Promise<{ priceId: string, amount: number }> {
+  // If it's already a price ID, return it
+  if (identifier.startsWith('price_')) {
+    const price = await stripe.prices.retrieve(identifier)
+    return {
+      priceId: identifier,
+      amount: price.unit_amount || 0
+    }
+  }
+  
+  // If it's a product ID, find the associated price
+  if (identifier.startsWith('prod_')) {
+    const prices = await stripe.prices.list({
+      product: identifier,
+      active: true
+    })
+    
+    // Find the price with the correct billing cycle
+    const targetInterval = billingCycle === 'monthly' ? 'month' : 'year'
+    const matchingPrice = prices.data.find(price => 
+      price.recurring?.interval === targetInterval
+    )
+    
+    if (matchingPrice) {
+      return {
+        priceId: matchingPrice.id,
+        amount: matchingPrice.unit_amount || 0
+      }
+    }
+  }
+  
+  // Fallback: use default amounts
+  const defaultAmount = billingCycle === 'monthly' ? 1000 : 10000 // $10 or $100
+  return {
+    priceId: identifier, // This will fail with Stripe, but at least we tried
+    amount: defaultAmount
+  }
+}
+
 // Plan configurations
 const PLAN_CONFIGS = {
   premium: {
     monthly: {
-      priceId: process.env.STRIPE_PREMIUM_MONTHLY_PRICE_ID || 'price_premium_monthly',
-      amount: 1000, // $10.00 in cents
+      identifier: process.env.STRIPE_PREMIUM_MONTHLY_PRICE_ID || 'price_premium_monthly',
+      defaultAmount: 1000, // $10.00 in cents
     },
     yearly: {
-      priceId: process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID || 'price_premium_yearly',
-      amount: 10000, // $100.00 in cents
+      identifier: process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID || 'price_premium_yearly',
+      defaultAmount: 10000, // $100.00 in cents
     }
   }
 }
@@ -59,6 +99,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Resolve the actual price ID and amount
+    const { priceId, amount } = await getPriceId(config.identifier, billingCycle)
+
     // Create or retrieve customer
     let customer
     try {
@@ -95,6 +138,8 @@ export async function POST(request: NextRequest) {
       metadata: {
         planId,
         billingCycle,
+        priceId,
+        amount: amount.toString(),
         plan_name: 'HoopMetrix Premium',
         customer_email: customer_details?.email || '',
         customer_name: customer_details?.name || '',
@@ -107,7 +152,8 @@ export async function POST(request: NextRequest) {
       setupIntentId: setupIntent.id,
       planId,
       billingCycle,
-      amount: config.amount,
+      amount: amount,
+      priceId: priceId,
     })
 
   } catch (error) {

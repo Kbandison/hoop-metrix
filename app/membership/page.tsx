@@ -216,6 +216,11 @@ function SubscriptionPaymentForm({
 
         const signupResult = await signupResponse.json()
         if (!signupResponse.ok) {
+          // Handle specific error cases
+          if (signupResponse.status === 409) {
+            // Account already exists
+            throw new Error(`${signupResult.error || 'Account already exists'} Would you like to sign in instead?`)
+          }
           throw new Error(signupResult.error || 'Failed to create account')
         }
 

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { getStripeKeys } from '@/lib/stripe/config'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set')
+const stripeConfig = getStripeKeys()
+if (!stripeConfig.secretKey) {
+  throw new Error('Stripe secret key is not configured')
 }
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+const stripe = new Stripe(stripeConfig.secretKey, {
   apiVersion: '2025-06-30.basil',
 })
 

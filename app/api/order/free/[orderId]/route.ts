@@ -3,9 +3,10 @@ import { createServiceClient } from '@/lib/supabase/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { orderId: string } }
+  context: { params: Promise<{ orderId: string }> }
 ) {
   try {
+    const params = await context.params
     // Extract the actual order ID from the fake payment intent ID
     // Format: free_order_{orderId}_{timestamp}
     const fakePaymentIntentId = params.orderId

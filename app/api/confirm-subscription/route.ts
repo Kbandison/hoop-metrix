@@ -11,21 +11,6 @@ const stripe = new Stripe(stripeConfig.secretKey, {
   apiVersion: '2025-06-30.basil',
 })
 
-// Plan configurations
-const PLAN_CONFIGS = {
-  premium: {
-    monthly: {
-      priceId: process.env.STRIPE_PREMIUM_MONTHLY_PRICE_ID || 'price_premium_monthly',
-      amount: 1000, // $10.00 in cents
-      interval: 'month' as const,
-    },
-    yearly: {
-      priceId: process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID || 'price_premium_yearly',
-      amount: 10000, // $100.00 in cents
-      interval: 'year' as const,
-    }
-  }
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,78 +41,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const planConfig = PLAN_CONFIGS[planId as keyof typeof PLAN_CONFIGS]
-    const config = planConfig[billingCycle as keyof typeof planConfig]
-
-    // First create/find a product 
-    let product
-    try {
-      const products = await stripe.products.list({
-        active: true,
-        limit: 10
-      })
-      
-      product = products.data.find(p => p.name === 'HoopMetrix Premium')
-      
-      if (!product) {
-        product = await stripe.products.create({
-          name: 'HoopMetrix Premium',
-          description: 'Complete basketball database access',
-          active: true,
-        })
-      }
-    } catch (error) {
-      console.error('Error creating/finding product:', error)
-      product = await stripe.products.create({
-        name: 'HoopMetrix Premium',
-        description: 'Complete basketball database access',
-        active: true,
-      })
+    // Get the correct price ID based on plan and billing cycle
+    let priceId: string
+    if (billingCycle === 'monthly') {
+      priceId = process.env.STRIPE_PREMIUM_MONTHLY_PRICE_ID || 'price_1RsuYgCYWJCJQ2h3qpA2ol9x'
+    } else {
+      priceId = process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID || 'price_1S9Y7cCYWJCJQ2h3ZIHVo8TM'
     }
 
-    // Find existing price or create new one
-    let price
-    try {
-      const prices = await stripe.prices.list({
-        product: product.id,
-        active: true,
-        limit: 10
-      })
-      
-      price = prices.data.find(p => 
-        p.unit_amount === config.amount && 
-        p.recurring?.interval === config.interval
-      )
-      
-      if (!price) {
-        price = await stripe.prices.create({
-          product: product.id,
-          unit_amount: config.amount,
-          currency: 'usd',
-          recurring: {
-            interval: config.interval,
-          },
-          active: true,
-        })
-      }
-    } catch (error) {
-      console.error('Error creating/finding price:', error)
-      price = await stripe.prices.create({
-        product: product.id,
-        unit_amount: config.amount,
-        currency: 'usd',
-        recurring: {
-          interval: config.interval,
-        },
-        active: true,
-      })
-    }
+    console.log('Using price ID:', priceId, 'for billing cycle:', billingCycle)
 
     // Create the subscription
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{
-        price: price.id,
+        price: priceId,
       }],
       default_payment_method: paymentMethodId,
       metadata: {
@@ -145,11 +73,15 @@ export async function POST(request: NextRequest) {
       current_period_start: (subscription as any).current_period_start
     })
 
+    console.log('Confirm subscription - starting user profile update process')
+    console.log('Customer ID:', customerId)
+    
     // Update user profile in Supabase by customer email (most reliable approach)
     try {
-      const supabase = await createServiceClient()
+      const supabase = createServiceClient()
       
       // Get customer email from Stripe
+      console.log('Retrieving customer from Stripe with ID:', customerId)
       const customer = await stripe.customers.retrieve(customerId)
       console.log('Retrieved customer from Stripe:', { 
         id: customer?.id, 
