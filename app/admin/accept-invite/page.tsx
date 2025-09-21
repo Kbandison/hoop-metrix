@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Shield, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/lib/auth/auth-context'
 
-export default function AcceptInvitePage() {
+function AcceptInviteContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'redirect'>('loading')
   const [message, setMessage] = useState('')
   const [userExists, setUserExists] = useState(false)
@@ -176,5 +176,28 @@ export default function AcceptInvitePage() {
         </Card>
       </motion.div>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-kentucky-blue-50 to-kentucky-blue-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-kentucky-blue-600 mb-4" />
+            <p className="text-gray-600">Loading invitation...</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default function AcceptInvitePage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AcceptInviteContent />
+    </Suspense>
   )
 }
