@@ -12,7 +12,11 @@ import {
   Filter,
   Mail,
   Calendar,
-  Crown
+  Crown,
+  Shield,
+  UserPlus,
+  UserMinus,
+  Send
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,6 +35,8 @@ interface AdminUser {
   joinDate: string
   status: string
   lastLogin?: string
+  role?: string
+  isAdmin?: boolean
 }
 
 interface UserManagerProps {
@@ -46,6 +52,12 @@ export default function UserManager({ users, onRefresh }: UserManagerProps) {
   const [loading, setLoading] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null)
+  const [adminAssignOpen, setAdminAssignOpen] = useState(false)
+  const [userToPromote, setUserToPromote] = useState<AdminUser | null>(null)
+  const [selectedRole, setSelectedRole] = useState<'admin' | 'editor'>('admin')
+
+  const [inviteEmailOpen, setInviteEmailOpen] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -123,6 +135,104 @@ export default function UserManager({ users, onRefresh }: UserManagerProps) {
     }
   }
 
+  const handlePromoteToAdmin = (user: AdminUser) => {
+    setUserToPromote(user)
+    setSelectedRole('admin')
+    setAdminAssignOpen(true)
+  }
+
+  const handleRemoveAdmin = async (user: AdminUser) => {
+    if (!user.id) return
+
+    setLoading(true)
+    try {
+      const response = await fetch('/api/admin/remove-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to remove admin role')
+      }
+
+      onRefresh()
+    } catch (error) {
+      console.error('Error removing admin role:', error)
+      // TODO: Replace with proper toast notification
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAssignRole = async () => {
+    if (!userToPromote) return
+
+    setLoading(true)
+    try {
+      const response = await fetch('/api/admin/assign-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: userToPromote.email, 
+          role: selectedRole 
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to assign admin role')
+      }
+
+      setAdminAssignOpen(false)
+      setUserToPromote(null)
+      onRefresh()
+    } catch (error) {
+      console.error('Error assigning admin role:', error)
+      // TODO: Replace with proper toast notification
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSendInvite = async () => {
+    if (!inviteEmail) {
+      console.error('Please enter an email address')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await fetch('/api/admin/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: inviteEmail,
+          role: 'admin'
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('API Error:', errorData)
+        throw new Error(errorData.error || 'Failed to send invitation')
+      }
+
+      const result = await response.json()
+      console.log('Invitation result:', result)
+      
+      setInviteEmailOpen(false)
+      setInviteEmail('')
+      // TODO: Replace with proper toast notification
+      alert('Invitation sent successfully!')
+    } catch (error) {
+      console.error('Error sending invitation:', error)
+      // TODO: Replace with proper toast notification
+      alert(`Failed to send invitation: ${error.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const getPlanColor = (plan: string) => {
     switch (plan) {
       case '$10 Membership':
@@ -149,7 +259,9 @@ export default function UserManager({ users, onRefresh }: UserManagerProps) {
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesFilter = filterBy === 'all' || user.status === filterBy
+    const matchesFilter = filterBy === 'all' || 
+                         user.status === filterBy ||
+                         (filterBy === 'admin' && user.isAdmin)
     return matchesSearch && matchesFilter
   })
 
@@ -162,6 +274,14 @@ export default function UserManager({ users, onRefresh }: UserManagerProps) {
             <CardTitle className="text-xl text-white">User Management</CardTitle>
           </div>
           <div className="flex items-center gap-3">
+            <Button
+              onClick={() => setInviteEmailOpen(true)}
+              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              variant="outline"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Invite Admin
+            </Button>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70 w-4 h-4" />
               <Input
@@ -180,6 +300,7 @@ export default function UserManager({ users, onRefresh }: UserManagerProps) {
                 <SelectItem value="all">All Users</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="admin">Admins</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -199,7 +320,15 @@ export default function UserManager({ users, onRefresh }: UserManagerProps) {
                   <User className="w-6 h-6 text-kentucky-blue-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{user.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-gray-900">{user.name}</p>
+                    {user.isAdmin && (
+                      <Badge className="bg-gradient-to-r from-purple-600 to-purple-700 text-white text-xs px-2 py-1">
+                        <Shield className="w-3 h-3 mr-1" />
+                        {user.role?.toUpperCase() || 'ADMIN'}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex items-center gap-1 text-sm text-gray-600">
                     <Mail className="w-3 h-3" />
                     {user.email}
@@ -226,6 +355,28 @@ export default function UserManager({ users, onRefresh }: UserManagerProps) {
                   <p className="text-xs text-gray-500 mt-1">Joined: {user.joinDate}</p>
                 </div>
                 <div className="flex items-center gap-2">
+                  {user.isAdmin ? (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleRemoveAdmin(user)}
+                      className="hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors"
+                      title="Remove Admin Role"
+                      disabled={loading}
+                    >
+                      <UserMinus className="w-4 h-4" />
+                    </Button>
+                  ) : (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handlePromoteToAdmin(user)}
+                      className="hover:bg-purple-50 hover:border-purple-300 hover:text-purple-600 transition-colors"
+                      title="Promote to Admin"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                    </Button>
+                  )}
                   <Button 
                     size="sm" 
                     variant="outline"
@@ -358,6 +509,106 @@ export default function UserManager({ users, onRefresh }: UserManagerProps) {
         onConfirm={handleDeleteConfirm}
         loading={loading}
       />
+
+      {/* Admin Role Assignment Modal */}
+      <Dialog open={adminAssignOpen} onOpenChange={setAdminAssignOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Assign Admin Role
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-gray-600">
+              Assign an admin role to <strong>{userToPromote?.name}</strong> ({userToPromote?.email})
+            </p>
+            
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Select value={selectedRole} onValueChange={(value: 'admin' | 'editor') => setSelectedRole(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin (Full Access)</SelectItem>
+                  <SelectItem value="editor">Editor (Limited Access)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAdminAssignOpen(false)
+                setUserToPromote(null)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAssignRole}
+              disabled={loading}
+              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              {loading ? 'Assigning...' : 'Assign Role'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Invitation Modal */}
+      <Dialog open={inviteEmailOpen} onOpenChange={setInviteEmailOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5" />
+              Invite Admin
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-gray-600">
+              Send an admin invitation to an email address. If the user doesn&apos;t have an account, they&apos;ll be prompted to create one.
+            </p>
+            
+            <div className="space-y-2">
+              <Label htmlFor="invite-email">Email Address *</Label>
+              <Input
+                id="invite-email"
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="admin@example.com"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setInviteEmailOpen(false)
+                setInviteEmail('')
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSendInvite}
+              disabled={loading || !inviteEmail}
+              className="bg-gradient-to-r from-kentucky-blue-600 to-kentucky-blue-700 hover:from-kentucky-blue-700 hover:to-kentucky-blue-800"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {loading ? 'Sending...' : 'Send Invitation'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

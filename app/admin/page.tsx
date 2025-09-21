@@ -51,6 +51,8 @@ interface AdminUser {
   joinDate: string
   status: string
   lastLogin?: string
+  role?: string
+  isAdmin?: boolean
 }
 
 interface AdminOrder {

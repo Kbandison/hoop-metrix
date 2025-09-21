@@ -51,14 +51,21 @@ export async function GET(request: NextRequest) {
     // Format users for admin panel
     const formattedUsers = users?.map(user => {
       const authData = authUsers.find(au => au.id === user.id)
+      // Handle both array and object responses from Supabase join
+      const adminRoles = Array.isArray(user.admin_users) ? user.admin_users : (user.admin_users ? [user.admin_users] : [])
+      const isAdmin = adminRoles.length > 0
+      const adminRole = isAdmin ? adminRoles[0].role : null
+      
       return {
         id: user.id,
         name: user.full_name || 'N/A',
         email: user.email,
         plan: user.membership_status === 'premium' ? '$10 Membership' : 'Free',
         joinDate: new Date(user.created_at).toLocaleDateString(),
-        status: user.admin_users?.[0]?.role === 'admin' ? 'admin' : 'active',
-        lastLogin: authData?.lastSignInAt ? new Date(authData.lastSignInAt).toLocaleDateString() : 'Never'
+        status: 'active', // User account status (active/inactive)
+        lastLogin: authData?.lastSignInAt ? new Date(authData.lastSignInAt).toLocaleDateString() : 'Never',
+        isAdmin: isAdmin,
+        role: adminRole
       }
     }) || []
 
