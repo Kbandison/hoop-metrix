@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
     } catch (emailError) {
       console.error('Admin Invite - Email sending failed:', emailError)
       return NextResponse.json(
-        { error: 'Failed to send invitation email', details: emailError.message },
+        { error: 'Failed to send invitation email', details: emailError instanceof Error ? emailError.message : String(emailError) },
         { status: 500 }
       )
     }
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Admin Invite - Error:', error)
     return NextResponse.json(
-      { error: 'Failed to send invitation', details: error.message },
+      { error: 'Failed to send invitation', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

@@ -227,7 +227,7 @@ export default function UserManager({ users, onRefresh }: UserManagerProps) {
     } catch (error) {
       console.error('Error sending invitation:', error)
       // TODO: Replace with proper toast notification
-      alert(`Failed to send invitation: ${error.message}`)
+      alert(`Failed to send invitation: ${error instanceof Error ? error.message : String(error)}`)
     } finally {
       setLoading(false)
     }
