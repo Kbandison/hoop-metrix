@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/lib/auth/auth-context'
 
+export const dynamic = 'force-dynamic'
+
 function AcceptInviteContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'redirect'>('loading')
   const [message, setMessage] = useState('')
